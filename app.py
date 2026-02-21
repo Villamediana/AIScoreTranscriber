@@ -1,0 +1,472 @@
+"""
+App Flask: transcrição de áudio para MIDI com Basic Pitch (Spotify).
+"""
+import os
+import shutil
+import subprocess
+import tempfile
+import time
+import uuid
+import logging
+import warnings
+from io import BytesIO
+from pathlib import Path
+from urllib.parse import urlparse
+
+from dotenv import load_dotenv
+from flask import Flask, jsonify, request, send_file, render_template, flash, redirect, url_for, session
+from werkzeug.exceptions import RequestEntityTooLarge
+from werkzeug.utils import secure_filename
+
+os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "2")
+
+load_dotenv()
+
+from transcribe.basic_pitch_module import transcribe_to_midi as basic_pitch_transcribe
+
+app = Flask(__name__)
+app.secret_key = os.environ.get("FLASK_SECRET_KEY", "dev-secret-change-in-production")
+app.config["MAX_CONTENT_LENGTH"] = 100 * 1024 * 1024  # 100 MB
+UPLOAD_FOLDER = Path(app.root_path) / "uploads"
+UPLOAD_FOLDER.mkdir(exist_ok=True)
+RESULTS_FOLDER = Path(app.root_path) / "results"
+RESULTS_FOLDER.mkdir(exist_ok=True)
+ALLOWED_EXTENSIONS = {"wav", "mp3", "flac", "ogg", "m4a", "webm"}
+YOUTUBE_DOMAINS = {"youtube.com", "www.youtube.com", "m.youtube.com", "youtu.be", "www.youtu.be"}
+
+logger = logging.getLogger("noteai")
+if not logger.handlers:
+    handler = logging.StreamHandler()
+    formatter = logging.Formatter("[NoteAI] %(levelname)s | %(message)s")
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+logger.setLevel(logging.INFO)
+logger.propagate = False
+
+# Silencia logs muito verbosos de bibliotecas externas.
+logging.getLogger().setLevel(logging.ERROR)
+logging.getLogger("tensorflow").setLevel(logging.ERROR)
+logging.getLogger("absl").setLevel(logging.ERROR)
+logging.getLogger("werkzeug").setLevel(logging.WARNING)
+warnings.filterwarnings("ignore", category=FutureWarning, module=r".*librosa.*")
+
+
+def allowed_file(filename: str) -> bool:
+    return "." in filename and filename.rsplit(".", 1)[-1].lower() in ALLOWED_EXTENSIONS
+
+
+def is_ajax_request() -> bool:
+    return request.headers.get("X-Requested-With") == "XMLHttpRequest"
+
+
+def error_response(message: str, status_code: int = 400):
+    if is_ajax_request():
+        return jsonify({"error": message}), status_code
+    flash(message, "error")
+    return redirect(url_for("index"))
+
+
+def is_youtube_url(url: str) -> bool:
+    try:
+        parsed = urlparse(url)
+    except ValueError:
+        return False
+    if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+        return False
+    host = parsed.netloc.lower()
+    return host in YOUTUBE_DOMAINS or host.endswith(".youtube.com") or host.endswith(".youtu.be")
+
+
+def cleanup_old_result_files(max_age_seconds: int = 60 * 60) -> None:
+    now = time.time()
+    for file_path in RESULTS_FOLDER.glob("*"):
+        try:
+            if file_path.is_file() and now - file_path.stat().st_mtime > max_age_seconds:
+                file_path.unlink()
+        except OSError:
+            pass
+
+
+def delete_result_assets(result_id: str | None) -> None:
+    if not result_id:
+        return
+    patterns = (
+        f"{result_id}_original.*",
+        f"{result_id}_preview.wav",
+        f"{result_id}_transcribed.mid",
+        f"{result_id}_midi_preview.wav",
+    )
+    for pattern in patterns:
+        for file_path in RESULTS_FOLDER.glob(pattern):
+            try:
+                file_path.unlink()
+            except OSError:
+                pass
+
+
+def _synthesize_midi_polyphonic(midi_obj, fs: int = 44100):
+    """
+    Síntese customizada com envelope de sustain para que acordes (várias notas ao mesmo tempo)
+    soem corretamente. O pretty_midi padrão usa decay muito rápido e notas simultâneas
+    ficam abafadas.
+    """
+    import numpy as np
+    from pretty_midi.utilities import note_number_to_hz
+
+    if not midi_obj.instruments:
+        return None
+
+    all_ends = [n.end for inst in midi_obj.instruments for n in inst.notes]
+    if not all_ends:
+        return None
+    end_time = max(all_ends)
+
+    total_samples = int(fs * (end_time + 0.5))
+    waveform = np.zeros(total_samples, dtype=np.float64)
+
+    attack_s = 0.01
+    release_s = 0.05
+
+    for inst in midi_obj.instruments:
+        if inst.is_drum:
+            continue
+        for note in inst.notes:
+            start_samp = int(note.start * fs)
+            end_samp = int(note.end * fs)
+            if end_samp <= start_samp:
+                continue
+            n_samps = end_samp - start_samp
+            freq = note_number_to_hz(note.pitch)
+            t = np.arange(n_samps, dtype=np.float64) / fs
+            osc = np.sin(2 * np.pi * freq * t)
+
+            # Envelope tipo ADSR: attack rápido, sustain plano, release no fim
+            env = np.ones(n_samps)
+            attack_n = min(int(attack_s * fs), n_samps // 2)
+            if attack_n > 0:
+                env[:attack_n] = np.linspace(0, 1, attack_n)
+            release_n = min(int(release_s * fs), n_samps // 2)
+            if release_n > 0:
+                env[-release_n:] = np.linspace(1, 0, release_n)
+
+            vel = note.velocity / 127.0
+            note_wave = osc * env * vel * 0.3
+            waveform[start_samp:end_samp] += note_wave
+
+    if np.abs(waveform).max() < 1e-9:
+        return None
+    waveform = waveform / np.abs(waveform).max() * 0.95
+    return waveform.astype(np.float32)
+
+
+def synthesize_midi_preview_wav(midi_bytes: bytes) -> Path | None:
+    """Gera um WAV a partir do MIDI com síntese que preserva acordes (várias notas ao mesmo tempo)."""
+    try:
+        import numpy as np
+        import pretty_midi
+        import soundfile as sf
+    except ImportError:
+        logger.warning("Dependências para síntese MIDI não disponíveis.")
+        return None
+
+    midi_fd, midi_temp = tempfile.mkstemp(suffix=".mid", dir=str(UPLOAD_FOLDER))
+    os.close(midi_fd)
+    wav_fd, wav_temp = tempfile.mkstemp(suffix=".wav", dir=str(UPLOAD_FOLDER))
+    os.close(wav_fd)
+    midi_temp_path = Path(midi_temp)
+    wav_temp_path = Path(wav_temp)
+
+    try:
+        midi_temp_path.write_bytes(midi_bytes)
+        midi_obj = pretty_midi.PrettyMIDI(str(midi_temp_path))
+        waveform = _synthesize_midi_polyphonic(midi_obj, fs=44100)
+        if waveform is None or waveform.size == 0:
+            return None
+        sf.write(str(wav_temp_path), waveform, 44100, subtype="PCM_16")
+        return wav_temp_path
+    except Exception:
+        wav_temp_path.unlink(missing_ok=True)
+        return None
+    finally:
+        midi_temp_path.unlink(missing_ok=True)
+
+
+def save_result_assets(
+    audio_path: Path,
+    preview_audio_path: Path,
+    midi_bytes: bytes,
+    midi_audio_preview_path: Path | None = None,
+) -> tuple[str, Path, Path, Path, Path | None]:
+    result_id = uuid.uuid4().hex
+    source_suffix = audio_path.suffix.lower() or ".audio"
+    original_copy_path = RESULTS_FOLDER / f"{result_id}_original{source_suffix}"
+    preview_copy_path = RESULTS_FOLDER / f"{result_id}_preview.wav"
+    midi_path = RESULTS_FOLDER / f"{result_id}_transcribed.mid"
+    midi_audio_copy_path = RESULTS_FOLDER / f"{result_id}_midi_preview.wav"
+    shutil.copy2(audio_path, original_copy_path)
+    shutil.copy2(preview_audio_path, preview_copy_path)
+    midi_path.write_bytes(midi_bytes)
+    if midi_audio_preview_path and midi_audio_preview_path.exists():
+        shutil.copy2(midi_audio_preview_path, midi_audio_copy_path)
+        return result_id, original_copy_path, preview_copy_path, midi_path, midi_audio_copy_path
+    return result_id, original_copy_path, preview_copy_path, midi_path, None
+
+
+def convert_audio_to_wav(input_audio_path: Path) -> Path:
+    """Converte qualquer input de áudio para WAV PCM, aumentando compatibilidade."""
+    try:
+        import imageio_ffmpeg
+    except ImportError as exc:
+        raise RuntimeError(
+            "Dependência em falta para converter áudio. Execute: pip install imageio-ffmpeg"
+        ) from exc
+
+    fd, output_wav = tempfile.mkstemp(suffix=".wav", dir=str(UPLOAD_FOLDER))
+    os.close(fd)
+    output_wav_path = Path(output_wav)
+
+    ffmpeg_exe = imageio_ffmpeg.get_ffmpeg_exe()
+    command = [
+        ffmpeg_exe,
+        "-y",
+        "-i",
+        str(input_audio_path),
+        "-vn",
+        "-acodec",
+        "pcm_s16le",
+        "-ar",
+        "22050",
+        "-ac",
+        "1",
+        str(output_wav_path),
+    ]
+    result = subprocess.run(command, capture_output=True)
+    if result.returncode != 0 or not output_wav_path.exists():
+        if output_wav_path.exists():
+            output_wav_path.unlink(missing_ok=True)
+        raise RuntimeError(
+            "Não foi possível processar o áudio deste ficheiro/link. Tente outro vídeo ou formato."
+        )
+    return output_wav_path
+
+
+def download_youtube_audio(youtube_url: str) -> tuple[Path, str]:
+    logger.info("A descarregar áudio do YouTube...")
+    try:
+        import yt_dlp
+    except ImportError as exc:
+        raise RuntimeError(
+            "Dependência em falta: instale 'yt-dlp' para usar URLs do YouTube."
+        ) from exc
+
+    output_template = str(UPLOAD_FOLDER / f"{uuid.uuid4().hex}.%(ext)s")
+    ydl_opts = {
+        "format": "bestaudio/best",
+        "outtmpl": output_template,
+        "noplaylist": True,
+        "quiet": True,
+        "no_warnings": True,
+    }
+
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        info = ydl.extract_info(youtube_url, download=True)
+        downloaded_path = ydl.prepare_filename(info)
+
+    audio_path = Path(downloaded_path)
+    if not audio_path.exists():
+        raise RuntimeError("Falha ao descarregar o áudio do YouTube.")
+
+    source_title = secure_filename(info.get("title", "")).strip("_-") or "youtube_audio"
+    return audio_path, source_title
+
+
+@app.route("/")
+def index():
+    return render_template("index.html")
+
+
+@app.route("/results/<result_id>/<kind>")
+def result_media(result_id: str, kind: str):
+    cleanup_old_result_files()
+    if session.get("active_result_id") != result_id:
+        return jsonify({"error": "Resultado não encontrado para esta sessão."}), 404
+    download = request.args.get("download") == "1"
+
+    if kind == "midi":
+        target = RESULTS_FOLDER / f"{result_id}_transcribed.mid"
+        if not target.exists():
+            return jsonify({"error": "Resultado não encontrado ou expirado."}), 404
+        return send_file(
+            str(target),
+            mimetype="audio/midi",
+            as_attachment=download,
+            download_name=f"{result_id}_transcribed.mid",
+        )
+
+    if kind == "original":
+        matches = list(RESULTS_FOLDER.glob(f"{result_id}_original.*"))
+        if not matches:
+            return jsonify({"error": "Resultado não encontrado ou expirado."}), 404
+        original_path = matches[0]
+        return send_file(
+            str(original_path),
+            as_attachment=download,
+            download_name=original_path.name,
+        )
+
+    if kind == "preview-audio":
+        target = RESULTS_FOLDER / f"{result_id}_preview.wav"
+        if not target.exists():
+            return jsonify({"error": "Resultado não encontrado ou expirado."}), 404
+        return send_file(
+            str(target),
+            mimetype="audio/wav",
+            as_attachment=download,
+            download_name=f"{result_id}_preview.wav",
+        )
+
+    if kind == "midi-audio":
+        target = RESULTS_FOLDER / f"{result_id}_midi_preview.wav"
+        if not target.exists():
+            return jsonify({"error": "Prévia de áudio MIDI não disponível para este resultado."}), 404
+        return send_file(
+            str(target),
+            mimetype="audio/wav",
+            as_attachment=download,
+            download_name=f"{result_id}_midi_preview.wav",
+        )
+
+    return jsonify({"error": "Tipo de media inválido."}), 400
+
+
+@app.route("/results/reset", methods=["POST"])
+def reset_result():
+    cleanup_old_result_files()
+    payload = request.get_json(silent=True) or {}
+    requested_result_id = payload.get("result_id")
+    active_result_id = session.get("active_result_id")
+    target_result_id = active_result_id or requested_result_id
+
+    if active_result_id and requested_result_id and requested_result_id != active_result_id:
+        return jsonify({"error": "Resultado inválido para esta sessão."}), 400
+
+    delete_result_assets(target_result_id)
+    session.pop("active_result_id", None)
+    return jsonify({"ok": True})
+
+
+@app.route("/transcribe", methods=["POST"])
+def transcribe():
+    cleanup_old_result_files()
+    file = request.files.get("audio")
+    youtube_url = (request.form.get("youtube_url") or "").strip()
+    has_file = bool(file and file.filename)
+    has_youtube_url = bool(youtube_url)
+
+    if has_file and has_youtube_url:
+        return error_response("Escolha apenas uma opção: ficheiro local ou URL do YouTube.")
+    if not has_file and not has_youtube_url:
+        return error_response("Envie um ficheiro de áudio ou informe uma URL do YouTube.")
+
+    audio_path = None
+    transcription_audio_path = None
+    midi_preview_audio_path = None
+    base = "audio"
+
+    try:
+        if has_youtube_url:
+            if not is_youtube_url(youtube_url):
+                return error_response("URL inválida. Use um link válido do YouTube.")
+            audio_path, base = download_youtube_audio(youtube_url)
+            logger.info("Download concluído: %s", base)
+        else:
+            if not allowed_file(file.filename):
+                return error_response(
+                    f"Formato não permitido. Use: {', '.join(sorted(ALLOWED_EXTENSIONS))}",
+                )
+
+            ext = file.filename.rsplit(".", 1)[-1].lower()
+            safe_name = f"{uuid.uuid4().hex}.{ext}"
+            audio_path = UPLOAD_FOLDER / safe_name
+            file.save(str(audio_path))
+            base = secure_filename(Path(file.filename).stem) or "audio"
+            logger.info("Ficheiro recebido: %s", base)
+
+        logger.info("A converter áudio para WAV...")
+        transcription_audio_path = convert_audio_to_wav(audio_path)
+        logger.info("A transcrever para MIDI...")
+        midi_bytes, note_events = basic_pitch_transcribe(str(transcription_audio_path))
+        midi_preview_audio_path = synthesize_midi_preview_wav(midi_bytes)
+        midi_filename = f"{base}_transcribed.mid"
+        logger.info("Transcrição concluída: %s", midi_filename)
+
+        if is_ajax_request():
+            previous_result_id = session.get("active_result_id")
+            if previous_result_id:
+                delete_result_assets(previous_result_id)
+
+            result_id, _, _, _, midi_audio_asset_path = save_result_assets(
+                audio_path,
+                transcription_audio_path,
+                midi_bytes,
+                midi_preview_audio_path,
+            )
+            session["active_result_id"] = result_id
+            payload = {
+                "result_id": result_id,
+                "original_audio_url": url_for("result_media", result_id=result_id, kind="preview-audio"),
+                "midi_preview_url": url_for("result_media", result_id=result_id, kind="midi"),
+                "midi_download_url": url_for("result_media", result_id=result_id, kind="midi", download=1),
+                "original_download_url": url_for("result_media", result_id=result_id, kind="original", download=1),
+                "midi_filename": midi_filename,
+                "note_events": note_events,
+                "note_events_total": len(note_events),
+                "note_events_truncated": False,
+                "expires_in_seconds": 3600,
+            }
+            if midi_audio_asset_path:
+                payload["midi_audio_url"] = url_for("result_media", result_id=result_id, kind="midi-audio")
+            return jsonify(payload)
+
+        return send_file(
+            path_or_file=BytesIO(midi_bytes),
+            mimetype="audio/midi",
+            as_attachment=True,
+            download_name=midi_filename,
+        )
+    except RuntimeError as e:
+        logger.warning("Falha previsível na transcrição: %s", e)
+        return error_response(str(e), status_code=500)
+    except Exception as e:
+        logger.error("Erro inesperado na transcrição: %s", e, exc_info=True)
+        return error_response(
+            "Erro na transcrição. Verifique o ficheiro e tente novamente.",
+            status_code=500,
+        )
+    finally:
+        if audio_path and audio_path.exists():
+            try:
+                audio_path.unlink()
+            except OSError:
+                pass
+        if transcription_audio_path and transcription_audio_path.exists():
+            try:
+                transcription_audio_path.unlink()
+            except OSError:
+                pass
+        if midi_preview_audio_path and midi_preview_audio_path.exists():
+            try:
+                midi_preview_audio_path.unlink()
+            except OSError:
+                pass
+
+
+@app.errorhandler(RequestEntityTooLarge)
+def handle_file_too_large(e):
+    del e
+    max_mb = app.config["MAX_CONTENT_LENGTH"] // (1024 * 1024)
+    return error_response(f"Ficheiro demasiado grande. Limite: {max_mb} MB.", status_code=413)
+
+
+if __name__ == "__main__":
+    app.run(debug=True, host="0.0.0.0", port=5000)

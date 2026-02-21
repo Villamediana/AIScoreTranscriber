@@ -1,0 +1,19 @@
+# Build tools (evita erro "Cannot import setuptools.build_meta")
+setuptools>=65.0.0
+wheel>=0.40.0
+
+# Web app
+flask>=3.0.0
+werkzeug>=3.0.0
+python-dotenv>=1.0.1
+yt-dlp>=2025.1.0
+imageio-ffmpeg>=0.5.1
+
+# Audio stack (compatível com TensorFlow 2.14 no Python 3.10)
+numpy>=1.23,<2.0
+librosa>=0.10.0
+soundfile>=0.12.0
+
+# Instale junto com requirements.txt para usar Basic Pitch
+basic-pitch==0.4.0
+tensorflow>=2.14,<2.15.1
