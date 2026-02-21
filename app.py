@@ -4,6 +4,7 @@ App Flask: transcrição de áudio para MIDI com Basic Pitch (Spotify).
 import os
 import shutil
 import subprocess
+import sys
 import tempfile
 import time
 import uuid
@@ -33,6 +34,7 @@ RESULTS_FOLDER = Path(app.root_path) / "results"
 RESULTS_FOLDER.mkdir(exist_ok=True)
 ALLOWED_EXTENSIONS = {"wav", "mp3", "flac", "ogg", "m4a", "webm"}
 YOUTUBE_DOMAINS = {"youtube.com", "www.youtube.com", "m.youtube.com", "youtu.be", "www.youtu.be"}
+SPOTIFY_DOMAINS = {"open.spotify.com", "www.open.spotify.com", "spotify.link", "www.spotify.link"}
 
 logger = logging.getLogger("noteai")
 if not logger.handlers:
@@ -59,10 +61,21 @@ def is_ajax_request() -> bool:
     return request.headers.get("X-Requested-With") == "XMLHttpRequest"
 
 
+def _safe_user_message(msg: str, generic: str = "Ocorreu um erro. Tente novamente.") -> str:
+    """Retorna mensagem segura para a UI, sem tracebacks ou detalhes técnicos."""
+    if not msg:
+        return generic
+    bad = ("Traceback", "File ", "runpy", "  File ", "  at ", ".py:", "Error:", "Exception:")
+    if any(b in msg for b in bad) or len(msg) > 150:
+        return generic
+    return msg
+
+
 def error_response(message: str, status_code: int = 400):
+    safe_msg = _safe_user_message(message)
     if is_ajax_request():
-        return jsonify({"error": message}), status_code
-    flash(message, "error")
+        return jsonify({"error": safe_msg}), status_code
+    flash(safe_msg, "error")
     return redirect(url_for("index"))
 
 
@@ -75,6 +88,17 @@ def is_youtube_url(url: str) -> bool:
         return False
     host = parsed.netloc.lower()
     return host in YOUTUBE_DOMAINS or host.endswith(".youtube.com") or host.endswith(".youtu.be")
+
+
+def is_spotify_url(url: str) -> bool:
+    try:
+        parsed = urlparse(url)
+    except ValueError:
+        return False
+    if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+        return False
+    host = parsed.netloc.lower().split(":")[0]
+    return host in SPOTIFY_DOMAINS or host.endswith(".spotify.com") or host.endswith(".spotify.link")
 
 
 def cleanup_old_result_files(max_age_seconds: int = 60 * 60) -> None:
@@ -212,8 +236,19 @@ def save_result_assets(
     return result_id, original_copy_path, preview_copy_path, midi_path, None
 
 
+def get_audio_duration_seconds(audio_path: Path) -> float:
+    """Retorna a duração em segundos do ficheiro de áudio."""
+    try:
+        import soundfile as sf
+        info = sf.info(str(audio_path))
+        return float(info.duration)
+    except Exception:
+        return 0.0
+
+
 def convert_audio_to_wav(input_audio_path: Path) -> Path:
     """Converte qualquer input de áudio para WAV PCM, aumentando compatibilidade."""
+    print(f"[WAV 1] A converter: {input_audio_path}")
     try:
         import imageio_ffmpeg
     except ImportError as exc:
@@ -244,9 +279,11 @@ def convert_audio_to_wav(input_audio_path: Path) -> Path:
     if result.returncode != 0 or not output_wav_path.exists():
         if output_wav_path.exists():
             output_wav_path.unlink(missing_ok=True)
+        print(f"[WAV 1] ERRO: ffmpeg returncode={result.returncode}")
         raise RuntimeError(
             "Não foi possível processar o áudio deste ficheiro/link. Tente outro vídeo ou formato."
         )
+    print(f"[WAV 1] OK: {output_wav_path}")
     return output_wav_path
 
 
@@ -278,6 +315,89 @@ def download_youtube_audio(youtube_url: str) -> tuple[Path, str]:
 
     source_title = secure_filename(info.get("title", "")).strip("_-") or "youtube_audio"
     return audio_path, source_title
+
+
+def _normalize_spotify_url(url: str) -> str:
+    """Converte URLs Spotify com locale (intl-pt, etc.) para formato canónico."""
+    import re
+    # open.spotify.com/intl-pt/track/xxx -> open.spotify.com/track/xxx
+    return re.sub(r"open\.spotify\.com/intl-[a-z-]+/", "open.spotify.com/", url)
+
+
+def download_spotify_audio(spotify_url: str) -> tuple[Path, str]:
+    """Descarrega áudio de um link Spotify (usa spotdl: Spotify -> YouTube -> áudio)."""
+    spotify_url = _normalize_spotify_url(spotify_url)
+    print("[SPOTIFY 1] Iniciando download...")
+    logger.info("A descarregar áudio do Spotify via spotdl...")
+
+    try:
+        import imageio_ffmpeg
+        ffmpeg_path = imageio_ffmpeg.get_ffmpeg_exe()
+    except ImportError:
+        ffmpeg_path = None
+
+    out_subdir = UPLOAD_FOLDER / f"spotdl_{uuid.uuid4().hex}"
+    out_subdir.mkdir(parents=True, exist_ok=True)
+    work_dir = str(out_subdir)
+    print(f"[SPOTIFY 1] work_dir={work_dir}")
+
+    output_template = str(out_subdir / "{title}.{output-ext}")
+    cmd = [sys.executable, "-m", "spotdl", "download", spotify_url, "--output", output_template, "--format", "mp3"]
+    if ffmpeg_path:
+        cmd.extend(["--ffmpeg", ffmpeg_path])
+
+    try:
+        print("[SPOTIFY 2] A executar spotdl...")
+        result = subprocess.run(
+            cmd,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            timeout=600,
+            cwd=work_dir,
+        )
+        print(f"[SPOTIFY 2] spotdl retornou code={result.returncode}")
+    except subprocess.TimeoutExpired:
+        try:
+            shutil.rmtree(out_subdir, ignore_errors=True)
+        except OSError:
+            pass
+        raise RuntimeError(
+            "O download do Spotify demorou demasiado. Tente outro link ou verifique a ligação à internet."
+        ) from None
+    except FileNotFoundError:
+        raise RuntimeError(
+            "spotdl não encontrado. Instale com: pip install spotdl"
+        ) from None
+
+    if result.returncode != 0:
+        err = (result.stderr or result.stdout or "").strip()
+        print(f"[SPOTIFY ERRO] spotdl stderr:\n{result.stderr or '(vazio)'}")
+        print(f"[SPOTIFY ERRO] spotdl stdout:\n{result.stdout or '(vazio)'}")
+        logger.warning("spotdl falhou: %s", err[:500] if err else "(sem output)")
+        try:
+            shutil.rmtree(out_subdir, ignore_errors=True)
+        except OSError:
+            pass
+        raise RuntimeError("Não foi possível obter o áudio deste link Spotify. Tente outro link.")
+
+    try:
+        downloaded = list(out_subdir.glob("*.*"))
+        print(f"[SPOTIFY 3] Ficheiros descarregados: {downloaded}")
+        if not downloaded:
+            raise RuntimeError("Falha ao descarregar o áudio do Spotify.")
+
+        audio_path = downloaded[0]
+        source_title = secure_filename(audio_path.stem).strip("_-") or "spotify_audio"
+        dest = UPLOAD_FOLDER / f"{uuid.uuid4().hex}{audio_path.suffix}"
+        shutil.move(str(audio_path), str(dest))
+        print(f"[SPOTIFY 3] Movido para: {dest}")
+        return dest, source_title
+    finally:
+        try:
+            shutil.rmtree(out_subdir, ignore_errors=True)
+        except OSError:
+            pass
 
 
 @app.route("/")
@@ -357,16 +477,18 @@ def reset_result():
 
 @app.route("/transcribe", methods=["POST"])
 def transcribe():
+    print("[STEP 0] transcribe() iniciado")
     cleanup_old_result_files()
     file = request.files.get("audio")
-    youtube_url = (request.form.get("youtube_url") or "").strip()
+    media_url = (request.form.get("youtube_url") or request.form.get("media_url") or "").strip()
     has_file = bool(file and file.filename)
-    has_youtube_url = bool(youtube_url)
+    has_media_url = bool(media_url)
+    print(f"[STEP 0] Input: has_file={has_file}, has_media_url={has_media_url}, media_url={media_url[:50] if media_url else ''}...")
 
-    if has_file and has_youtube_url:
-        return error_response("Escolha apenas uma opção: ficheiro local ou URL do YouTube.")
-    if not has_file and not has_youtube_url:
-        return error_response("Envie um ficheiro de áudio ou informe uma URL do YouTube.")
+    if has_file and has_media_url:
+        return error_response("Escolha apenas uma opção: ficheiro local ou URL (YouTube/Spotify).")
+    if not has_file and not has_media_url:
+        return error_response("Envie um ficheiro de áudio ou informe uma URL do YouTube ou Spotify.")
 
     audio_path = None
     transcription_audio_path = None
@@ -374,12 +496,20 @@ def transcribe():
     base = "audio"
 
     try:
-        if has_youtube_url:
-            if not is_youtube_url(youtube_url):
-                return error_response("URL inválida. Use um link válido do YouTube.")
-            audio_path, base = download_youtube_audio(youtube_url)
+        if has_media_url:
+            print("[STEP 1] A obter áudio da URL...")
+            if is_youtube_url(media_url):
+                print("[STEP 1a] YouTube detectado")
+                audio_path, base = download_youtube_audio(media_url)
+            elif is_spotify_url(media_url):
+                print("[STEP 1b] Spotify detectado")
+                audio_path, base = download_spotify_audio(media_url)
+            else:
+                return error_response("URL inválida. Use um link do YouTube ou Spotify.")
+            print(f"[STEP 1] Download OK: audio_path={audio_path}, base={base}")
             logger.info("Download concluído: %s", base)
         else:
+            print("[STEP 1] Ficheiro local")
             if not allowed_file(file.filename):
                 return error_response(
                     f"Formato não permitido. Use: {', '.join(sorted(ALLOWED_EXTENSIONS))}",
@@ -390,14 +520,24 @@ def transcribe():
             audio_path = UPLOAD_FOLDER / safe_name
             file.save(str(audio_path))
             base = secure_filename(Path(file.filename).stem) or "audio"
+            print(f"[STEP 1] Ficheiro guardado: {audio_path}")
             logger.info("Ficheiro recebido: %s", base)
 
+        print("[STEP 2] A converter áudio para WAV...")
         logger.info("A converter áudio para WAV...")
         transcription_audio_path = convert_audio_to_wav(audio_path)
+        print(f"[STEP 2] WAV OK: {transcription_audio_path}")
+
+        print("[STEP 3] A transcrever para MIDI (Basic Pitch)...")
         logger.info("A transcrever para MIDI...")
-        midi_bytes, note_events = basic_pitch_transcribe(str(transcription_audio_path))
+        midi_bytes, note_events, time_sig, bpm = basic_pitch_transcribe(str(transcription_audio_path))
+        print(f"[STEP 3] Basic Pitch OK: {len(midi_bytes)} bytes, {len(note_events)} notas")
+
+        print("[STEP 4] A sintetizar preview MIDI...")
         midi_preview_audio_path = synthesize_midi_preview_wav(midi_bytes)
+        print(f"[STEP 4] Síntese OK: {midi_preview_audio_path}")
         midi_filename = f"{base}_transcribed.mid"
+        print(f"[STEP 5] A guardar resultados...")
         logger.info("Transcrição concluída: %s", midi_filename)
 
         if is_ajax_request():
@@ -412,6 +552,7 @@ def transcribe():
                 midi_preview_audio_path,
             )
             session["active_result_id"] = result_id
+            audio_duration = get_audio_duration_seconds(transcription_audio_path)
             payload = {
                 "result_id": result_id,
                 "original_audio_url": url_for("result_media", result_id=result_id, kind="preview-audio"),
@@ -422,10 +563,14 @@ def transcribe():
                 "note_events": note_events,
                 "note_events_total": len(note_events),
                 "note_events_truncated": False,
+                "time_signature": {"numerator": time_sig[0], "denominator": time_sig[1]},
+                "bpm": bpm,
+                "audio_duration": audio_duration,
                 "expires_in_seconds": 3600,
             }
             if midi_audio_asset_path:
                 payload["midi_audio_url"] = url_for("result_media", result_id=result_id, kind="midi-audio")
+            print("[STEP 5] Concluído com sucesso!")
             return jsonify(payload)
 
         return send_file(
@@ -435,9 +580,14 @@ def transcribe():
             download_name=midi_filename,
         )
     except RuntimeError as e:
-        logger.warning("Falha previsível na transcrição: %s", e)
-        return error_response(str(e), status_code=500)
+        safe = _safe_user_message(str(e))
+        print(f"[ERRO] RuntimeError: {safe}")
+        logger.warning("Falha previsível na transcrição: %s", str(e)[:200])
+        return error_response(safe, status_code=500)
     except Exception as e:
+        print(f"[ERRO] Exception: {type(e).__name__}: {e}")
+        import traceback
+        traceback.print_exc()
         logger.error("Erro inesperado na transcrição: %s", e, exc_info=True)
         return error_response(
             "Erro na transcrição. Verifique o ficheiro e tente novamente.",
