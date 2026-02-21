@@ -68,6 +68,7 @@ models/
 
 # === Audio/video processing (uploads ou outputs) ===
 uploads/
+results/
 downloads/
 output/
 temp/
