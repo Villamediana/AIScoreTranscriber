@@ -1,10 +1,10 @@
 # Áudio → MIDI
 
-Sistema em Python + Flask para transcrever áudio em ficheiros MIDI usando **Basic Pitch (Spotify)**.
+Sistema em Python + Flask para transcrever áudio em ficheiros MIDI usando **Basic Pitch**.
 
 - Funciona com qualquer instrumento, polifónico.
 - No Windows usa ONNX por defeito (não precisa de TensorFlow para correr).
-- Aceita **ficheiro local**, **URL YouTube** ou **URL Spotify**.
+- Aceita **ficheiro local** ou **URL YouTube**.
 
 ## Instalação
 
@@ -25,7 +25,7 @@ Abre no browser: **http://127.0.0.1:5000**
 
 1. Escolhe uma das opções de entrada:
    - carregar ficheiro de áudio (WAV, MP3, FLAC, OGG, M4A), ou
-   - colar uma URL do YouTube ou Spotify.
+   - colar uma URL do YouTube.
 2. Clica em **Transcrever e descarregar MIDI** e guarda o `.mid` gerado.
 3. Após a transcrição, a interface mostra:
    - player do áudio original,
@@ -41,7 +41,7 @@ NoteAI/
 ├── README.md
 ├── transcribe/
 │   ├── __init__.py
-│   └── basic_pitch_module.py   # Basic Pitch (Spotify)
+│   └── basic_pitch_module.py   # Basic Pitch
 └── templates/
     ├── base.html
     └── index.html
@@ -52,5 +52,4 @@ NoteAI/
 - **Basic Pitch**: funciona logo após `pip install basic-pitch`.
 - **Upload local**: máximo 100 MB por ficheiro.
 - **YouTube URL**: o servidor descarrega o áudio temporariamente usando `yt-dlp`.
-- **Spotify URL**: o servidor usa `spotdl` para obter o áudio (Spotify → YouTube → áudio) e remove o ficheiro após a transcrição.
 - **Pré-escuta**: os resultados ficam disponíveis por tempo limitado (limpeza automática de ficheiros temporários).

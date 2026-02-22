@@ -350,13 +350,13 @@
 
   <form action="{{ url_for('transcribe') }}" method="post" enctype="multipart/form-data" id="form">
     <div class="input-tabs" id="inputTabs">
-      <button type="button" class="input-tab active" data-input="url">YouTube / Spotify</button>
+      <button type="button" class="input-tab active" data-input="url">YouTube</button>
       <button type="button" class="input-tab" data-input="file">Arquivo</button>
     </div>
     <div class="input-panel input-panel-url" id="inputPanelUrl">
       <div class="field">
         <label class="field-label" for="youtube_url">URL</label>
-        <input type="url" name="youtube_url" id="youtube_url" placeholder="https://youtube.com/watch?v=... ou https://open.spotify.com/track/...">
+        <input type="url" name="youtube_url" id="youtube_url" placeholder="https://youtube.com/watch?v=...">
       </div>
     </div>
     <div class="input-panel input-panel-file" id="inputPanelFile" hidden>
@@ -1345,7 +1345,6 @@
       rows += '<tr><td>'+st2.toFixed(3)+'</td><td>'+en2.toFixed(3)+'</td><td>'+Math.max(0,en2-st2).toFixed(3)+'</td><td>'+pitchToLabel(Number(it.pitch||0))+'</td><td>'+(it.pitch||0)+'</td><td>'+(it.confidence==null?'-':Number(it.confidence).toFixed(2))+'</td></tr>';
     }
     bpRows.innerHTML = rows || '<tr><td colspan="6" class="bp-empty">Sem eventos.</td></tr>';
-    bpPanel.hidden = false;
   }
 
   function stopStatusTicker() {
@@ -1353,12 +1352,9 @@
   }
   function startStatusTicker(hasFile, mediaUrl) {
     stopStatusTicker();
-    var isSpotify = mediaUrl && /spotify\.com|spotify\.link/i.test(mediaUrl);
     var phases = hasFile
       ? ['Enviando arquivo...','Processando áudio...','Transcrevendo para MIDI...','Finalizando...']
-      : (isSpotify
-        ? ['Descarregando do Spotify...','Extraindo áudio...','Transcrevendo para MIDI...','Finalizando...']
-        : ['Baixando do YouTube...','Extraindo áudio...','Transcrevendo para MIDI...','Finalizando...']);
+      : ['Baixando do YouTube...','Extraindo áudio...','Transcrevendo para MIDI...','Finalizando...'];
     var idx = 0;
     function tick() { stageLoadingText.textContent = phases[Math.min(idx, phases.length-1)]; if (idx < phases.length-1) idx++; }
     tick();
@@ -2312,7 +2308,7 @@
     var hasFile = !urlTabActive && fileInput.files && fileInput.files.length > 0;
     var hasUrl = urlTabActive && ytInput.value.trim().length > 0;
     if (!hasFile && !hasUrl) {
-      showError(urlTabActive ? 'Cole uma URL do YouTube ou Spotify.' : 'Selecione um arquivo de áudio.');
+      showError(urlTabActive ? 'Cole uma URL do YouTube.' : 'Selecione um arquivo de áudio.');
       return;
     }
     if (hasUrl) fileInput.value = '';

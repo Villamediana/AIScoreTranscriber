@@ -5,9 +5,9 @@ wheel>=0.40.0
 # Web app
 flask>=3.0.0
 werkzeug>=3.0.0
+music21>=9.0.0
 python-dotenv>=1.0.1
 yt-dlp>=2025.1.0
-spotdl>=4.0.0
 imageio-ffmpeg>=0.5.1
 
 # Audio stack (compatível com TensorFlow 2.14 no Python 3.10)

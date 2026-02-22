@@ -1,5 +1,5 @@
 """
-App Flask: transcrição de áudio para MIDI com Basic Pitch (Spotify).
+App Flask: transcrição de áudio para MIDI com Basic Pitch.
 """
 import os
 import shutil
@@ -34,7 +34,6 @@ RESULTS_FOLDER = Path(app.root_path) / "results"
 RESULTS_FOLDER.mkdir(exist_ok=True)
 ALLOWED_EXTENSIONS = {"wav", "mp3", "flac", "ogg", "m4a", "webm"}
 YOUTUBE_DOMAINS = {"youtube.com", "www.youtube.com", "m.youtube.com", "youtu.be", "www.youtu.be"}
-SPOTIFY_DOMAINS = {"open.spotify.com", "www.open.spotify.com", "spotify.link", "www.spotify.link"}
 
 logger = logging.getLogger("noteai")
 if not logger.handlers:
@@ -88,17 +87,6 @@ def is_youtube_url(url: str) -> bool:
         return False
     host = parsed.netloc.lower()
     return host in YOUTUBE_DOMAINS or host.endswith(".youtube.com") or host.endswith(".youtu.be")
-
-
-def is_spotify_url(url: str) -> bool:
-    try:
-        parsed = urlparse(url)
-    except ValueError:
-        return False
-    if parsed.scheme not in {"http", "https"} or not parsed.netloc:
-        return False
-    host = parsed.netloc.lower().split(":")[0]
-    return host in SPOTIFY_DOMAINS or host.endswith(".spotify.com") or host.endswith(".spotify.link")
 
 
 def cleanup_old_result_files(max_age_seconds: int = 60 * 60) -> None:
@@ -317,89 +305,6 @@ def download_youtube_audio(youtube_url: str) -> tuple[Path, str]:
     return audio_path, source_title
 
 
-def _normalize_spotify_url(url: str) -> str:
-    """Converte URLs Spotify com locale (intl-pt, etc.) para formato canónico."""
-    import re
-    # open.spotify.com/intl-pt/track/xxx -> open.spotify.com/track/xxx
-    return re.sub(r"open\.spotify\.com/intl-[a-z-]+/", "open.spotify.com/", url)
-
-
-def download_spotify_audio(spotify_url: str) -> tuple[Path, str]:
-    """Descarrega áudio de um link Spotify (usa spotdl: Spotify -> YouTube -> áudio)."""
-    spotify_url = _normalize_spotify_url(spotify_url)
-    print("[SPOTIFY 1] Iniciando download...")
-    logger.info("A descarregar áudio do Spotify via spotdl...")
-
-    try:
-        import imageio_ffmpeg
-        ffmpeg_path = imageio_ffmpeg.get_ffmpeg_exe()
-    except ImportError:
-        ffmpeg_path = None
-
-    out_subdir = UPLOAD_FOLDER / f"spotdl_{uuid.uuid4().hex}"
-    out_subdir.mkdir(parents=True, exist_ok=True)
-    work_dir = str(out_subdir)
-    print(f"[SPOTIFY 1] work_dir={work_dir}")
-
-    output_template = str(out_subdir / "{title}.{output-ext}")
-    cmd = [sys.executable, "-m", "spotdl", "download", spotify_url, "--output", output_template, "--format", "mp3"]
-    if ffmpeg_path:
-        cmd.extend(["--ffmpeg", ffmpeg_path])
-
-    try:
-        print("[SPOTIFY 2] A executar spotdl...")
-        result = subprocess.run(
-            cmd,
-            stdin=subprocess.DEVNULL,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-            timeout=600,
-            cwd=work_dir,
-        )
-        print(f"[SPOTIFY 2] spotdl retornou code={result.returncode}")
-    except subprocess.TimeoutExpired:
-        try:
-            shutil.rmtree(out_subdir, ignore_errors=True)
-        except OSError:
-            pass
-        raise RuntimeError(
-            "O download do Spotify demorou demasiado. Tente outro link ou verifique a ligação à internet."
-        ) from None
-    except FileNotFoundError:
-        raise RuntimeError(
-            "spotdl não encontrado. Instale com: pip install spotdl"
-        ) from None
-
-    if result.returncode != 0:
-        err = (result.stderr or result.stdout or "").strip()
-        print(f"[SPOTIFY ERRO] spotdl stderr:\n{result.stderr or '(vazio)'}")
-        print(f"[SPOTIFY ERRO] spotdl stdout:\n{result.stdout or '(vazio)'}")
-        logger.warning("spotdl falhou: %s", err[:500] if err else "(sem output)")
-        try:
-            shutil.rmtree(out_subdir, ignore_errors=True)
-        except OSError:
-            pass
-        raise RuntimeError("Não foi possível obter o áudio deste link Spotify. Tente outro link.")
-
-    try:
-        downloaded = list(out_subdir.glob("*.*"))
-        print(f"[SPOTIFY 3] Ficheiros descarregados: {downloaded}")
-        if not downloaded:
-            raise RuntimeError("Falha ao descarregar o áudio do Spotify.")
-
-        audio_path = downloaded[0]
-        source_title = secure_filename(audio_path.stem).strip("_-") or "spotify_audio"
-        dest = UPLOAD_FOLDER / f"{uuid.uuid4().hex}{audio_path.suffix}"
-        shutil.move(str(audio_path), str(dest))
-        print(f"[SPOTIFY 3] Movido para: {dest}")
-        return dest, source_title
-    finally:
-        try:
-            shutil.rmtree(out_subdir, ignore_errors=True)
-        except OSError:
-            pass
-
-
 @app.route("/")
 def index():
     return render_template("index.html")
@@ -486,9 +391,9 @@ def transcribe():
     print(f"[STEP 0] Input: has_file={has_file}, has_media_url={has_media_url}, media_url={media_url[:50] if media_url else ''}...")
 
     if has_file and has_media_url:
-        return error_response("Escolha apenas uma opção: ficheiro local ou URL (YouTube/Spotify).")
+        return error_response("Escolha apenas uma opção: ficheiro local ou URL do YouTube.")
     if not has_file and not has_media_url:
-        return error_response("Envie um ficheiro de áudio ou informe uma URL do YouTube ou Spotify.")
+        return error_response("Envie um ficheiro de áudio ou informe uma URL do YouTube.")
 
     audio_path = None
     transcription_audio_path = None
@@ -501,11 +406,8 @@ def transcribe():
             if is_youtube_url(media_url):
                 print("[STEP 1a] YouTube detectado")
                 audio_path, base = download_youtube_audio(media_url)
-            elif is_spotify_url(media_url):
-                print("[STEP 1b] Spotify detectado")
-                audio_path, base = download_spotify_audio(media_url)
             else:
-                return error_response("URL inválida. Use um link do YouTube ou Spotify.")
+                return error_response("URL inválida. Use um link do YouTube.")
             print(f"[STEP 1] Download OK: audio_path={audio_path}, base={base}")
             logger.info("Download concluído: %s", base)
         else:

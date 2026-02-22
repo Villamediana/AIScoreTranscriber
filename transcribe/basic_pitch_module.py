@@ -1,5 +1,5 @@
 """
-Transcrição áudio -> MIDI usando Basic Pitch (Spotify).
+Transcrição áudio -> MIDI usando Basic Pitch.
 Funciona com qualquer instrumento, polifónico.
 """
 import os
