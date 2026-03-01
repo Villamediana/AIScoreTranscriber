@@ -4,6 +4,7 @@
 {% block head %}
   <script src="https://cdn.jsdelivr.net/npm/@tonejs/midi@2.0.28/build/Midi.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/vexflow@4.0.3/build/cjs/vexflow.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
   <script>
     window.TONE_SILENCE_VERSION_LOGGING = true;
   </script>
@@ -133,6 +134,27 @@
       color: var(--text-2);
       font-weight: 600;
     }
+    .sheet-pdf-btn {
+      margin-left: auto;
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 0.35rem 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--text-2);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      transition: border-color 0.15s, color 0.15s, background 0.15s;
+    }
+    .sheet-pdf-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(124, 58, 237, 0.06);
+    }
+    .sheet-pdf-btn svg { width: 14px; height: 14px; display: block; }
     .sheet-wrap .sheet-inner-wrap {
       flex: 1;
       min-height: 0;
@@ -459,6 +481,10 @@
           <option value="4" selected>4</option>
           <option value="8">8</option>
         </select>
+        <button type="button" class="sheet-pdf-btn" id="sheetPdfBtn" title="Download score as PDF">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 10v10m0-10l-3 3m3-3l3 3M4 6h16a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V8a2 2 0 012-2z"/></svg>
+          Download PDF
+        </button>
       </div>
       <div class="sheet-inner-wrap" id="sheetInnerWrap">
         <div class="sheet-inner" id="sheetInner"></div>
@@ -595,6 +621,7 @@
 
   var sheetTsNum = document.getElementById('sheetTsNum');
   var sheetTsDen = document.getElementById('sheetTsDen');
+  var sheetPdfBtn = document.getElementById('sheetPdfBtn');
 
   var recordingToggle = document.getElementById('recordingToggle');
   var blankPlayerBar = document.getElementById('blankPlayerBar');
@@ -1377,6 +1404,81 @@
   }
   if (sheetTsNum) sheetTsNum.addEventListener('change', applyTimeSignatureFromSelects);
   if (sheetTsDen) sheetTsDen.addEventListener('change', applyTimeSignatureFromSelects);
+
+  function downloadSheetAsPdf() {
+    var JsPDF = typeof jspdf !== 'undefined' ? jspdf.jsPDF : (typeof window !== 'undefined' && window.jspdf && window.jspdf.jsPDF) ? window.jspdf.jsPDF : null;
+    if (!sheetInner || !JsPDF) return;
+    var svg = sheetInner.querySelector('svg');
+    if (!svg) {
+      if (typeof showError === 'function') showError('No score to export. Transcribe first and open the Sheet view.');
+      else alert('No score to export. Transcribe first and open the Sheet view.');
+      return;
+    }
+    var wPx = parseFloat(svg.getAttribute('width')) || sheetInner.scrollWidth || 800;
+    var hPx = parseFloat(svg.getAttribute('height')) || sheetInner.scrollHeight || 600;
+    var scale = 2;
+    var svgData = new XMLSerializer().serializeToString(svg);
+    var svgUrl = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
+    var img = new Image();
+    img.onload = function () {
+      var fullCanvas = document.createElement('canvas');
+      fullCanvas.width = wPx * scale;
+      fullCanvas.height = hPx * scale;
+      var ctx = fullCanvas.getContext('2d');
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, fullCanvas.width, fullCanvas.height);
+      ctx.drawImage(img, 0, 0, fullCanvas.width, fullCanvas.height);
+      try {
+        var pageWidthPt = 595.28;
+        var pageHeightPt = 841.89;
+        var pxPerPt = (96 / 72) * scale;
+        var SYSTEM_HEIGHT = 280 * scale;
+        var TOP_PADDING = 20 * scale;
+        var SYSTEMS_PER_PAGE = Math.max(1, Math.floor((pageHeightPt * pxPerPt) / SYSTEM_HEIGHT));
+        var srcY = 0;
+        var pageNum = 0;
+        var doc = new JsPDF({ orientation: 'p', unit: 'pt', format: 'a4' });
+        while (srcY < fullCanvas.height) {
+          var remaining = fullCanvas.height - srcY;
+          var systemsOnPage = pageNum === 0
+            ? SYSTEMS_PER_PAGE
+            : Math.min(SYSTEMS_PER_PAGE, Math.floor(remaining / SYSTEM_HEIGHT));
+          if (systemsOnPage <= 0) systemsOnPage = 1;
+          var srcH = pageNum === 0
+            ? TOP_PADDING + systemsOnPage * SYSTEM_HEIGHT
+            : systemsOnPage * SYSTEM_HEIGHT;
+          srcH = Math.min(srcH, fullCanvas.height - srcY);
+          if (srcH <= 0) break;
+          if (pageNum > 0) doc.addPage();
+          var pageCanvas = document.createElement('canvas');
+          pageCanvas.width = fullCanvas.width;
+          pageCanvas.height = srcH;
+          var pageCtx = pageCanvas.getContext('2d');
+          pageCtx.fillStyle = '#ffffff';
+          pageCtx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+          pageCtx.drawImage(fullCanvas, 0, srcY, fullCanvas.width, srcH, 0, 0, fullCanvas.width, srcH);
+          var sliceWPt = fullCanvas.width / pxPerPt;
+          var sliceHPt = srcH / pxPerPt;
+          var scaleFit = Math.min(pageWidthPt / sliceWPt, pageHeightPt / sliceHPt);
+          var fitW = sliceWPt * scaleFit;
+          var fitH = sliceHPt * scaleFit;
+          doc.addImage(pageCanvas.toDataURL('image/png'), 'PNG', 0, 0, fitW, fitH);
+          srcY += srcH;
+          pageNum++;
+        }
+        doc.save('score.pdf');
+      } catch (e) {
+        if (typeof showError === 'function') showError('PDF export failed.');
+        else alert('PDF export failed.');
+      }
+    };
+    img.onerror = function () {
+      if (typeof showError === 'function') showError('PDF export failed.');
+      else alert('PDF export failed.');
+    };
+    img.src = svgUrl;
+  }
+  if (sheetPdfBtn) sheetPdfBtn.addEventListener('click', downloadSheetAsPdf);
 
   function handleSheetAreaClick(e) {
     if (!sheetInnerWrap || !sheetWrap || sheetWrap.hidden) return;
