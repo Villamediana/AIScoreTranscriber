@@ -297,8 +297,9 @@ def download_youtube_audio(youtube_url: str) -> tuple[Path, str]:
         "noplaylist": True,
         "quiet": True,
         "no_warnings": True,
-        # Reduz deteção de bot em servidores (YouTube pode pedir login)
-        "extractor_args": {"youtube": {"player_client": ["android", "web"]}},
+        # Clientes que não exigem PO Token; tv_simply/tv costumam funcionar melhor em servidores
+        # Ver: https://github.com/yt-dlp/yt-dlp/wiki/Extractors#youtube
+        "extractor_args": {"youtube": {"player_client": ["tv_simply", "tv", "android", "web"]}},
         "http_headers": {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
             "Accept-Language": "en-US,en;q=0.9",
@@ -510,6 +511,15 @@ def transcribe():
         logger.warning("Falha previsível na transcrição: %s", str(e)[:200])
         return error_response(safe, status_code=500)
     except Exception as e:
+        # Erro do YouTube "Sign in to confirm you're not a bot" (sem cookies no servidor)
+        err_msg = str(e).lower()
+        if "yt_dlp" in type(e).__module__ and ("bot" in err_msg or "cookies" in err_msg or "sign in" in err_msg):
+            logger.warning("YouTube bloqueou no servidor (bot/cookies): %s", str(e)[:150])
+            return error_response(
+                "O YouTube não permite descarregar a partir deste servidor. "
+                "Por favor, descarregue o áudio no seu computador e envie o ficheiro aqui (arrastar ou escolher ficheiro).",
+                status_code=503,
+            )
         print(f"[ERRO] Exception: {type(e).__name__}: {e}")
         import traceback
         traceback.print_exc()

@@ -82,22 +82,33 @@ NoteAIs/
 
 ## Production: YouTube em servidor
 
-Em servidores (VPS, cloud), o YouTube pode bloquear descarregamentos com *"Sign in to confirm you're not a bot"*. Para contornar:
+Em servidores (VPS, cloud), o YouTube pode bloquear com *"Sign in to confirm you're not a bot"*. A solução recomendada pela documentação do yt-dlp é **passar cookies** em ficheiro.
 
-1. **Exportar cookies** do YouTube no teu browser (formato Netscape):
-   - Extensão [Get cookies.txt LOCALLY](https://github.com/rotemdan/ExportCookies) (Chrome/Edge) ou [cookies.txt](https://addons.mozilla.org/en-US/firefox/addon/cookies-txt/) (Firefox).
-   - Abre youtube.com, faz login se precisar, e exporta para `cookies.txt`.
+### Referência oficial
+- [FAQ: How do I pass cookies to yt-dlp?](https://github.com/yt-dlp/yt-dlp/wiki/FAQ#how-do-i-pass-cookies-to-yt-dlp)
+- [Extractors: Exporting YouTube cookies](https://github.com/yt-dlp/yt-dlp/wiki/Extractors#exporting-youtube-cookies)
 
-2. **Enviar o ficheiro** para o servidor (ex.: `/root/AIScoreTranscriber/cookies.txt`).
+### Passos
 
-3. **Definir a variável de ambiente** antes de correr a app:
+1. **Exportar cookies** no teu PC (formato **Netscape**):
+   - Usa uma extensão: [Get cookies.txt LOCALLY](https://chrome.google.com/webstore/detail/get-cookiestxt-locally/cclelndahbckbenkjhflpdbgdldlbecc) (Chrome/Edge) ou [cookies.txt](https://addons.mozilla.org/en-US/firefox/addon/cookies-txt/) (Firefox).  
+     *(Não uses "Get cookies.txt" sem "LOCALLY" — foi reportado como malware.)_
+   - Abre **youtube.com** (faz login se quiseres), exporta só para **youtube.com** e guarda como `cookies.txt`.
+   - O ficheiro deve estar em formato Netscape: a **primeira linha** tem de ser `# HTTP Cookie File` ou `# Netscape HTTP Cookie File`.
+   - No **Linux** o ficheiro deve usar finais de linha **LF** (`\n`). Se exportares no Windows, converte para LF antes de enviar (ex.: no Notepad++ "Edit → EOL Conversion → Unix (LF)").
+
+2. **Enviar** `cookies.txt` para o servidor (ex.: `/root/AIScoreTranscriber/cookies.txt`).
+
+3. **Definir a variável de ambiente** e reiniciar a app:
    ```bash
    export YOUTUBE_COOKIES_FILE=/root/AIScoreTranscriber/cookies.txt
-   python app.py
+   # reinicia a app (nohup, systemd, etc.)
    ```
-   Ou no systemd/PM2: coloca `YOUTUBE_COOKIES_FILE=/caminho/para/cookies.txt` no ambiente do processo.
+   Em systemd/PM2: adiciona `YOUTUBE_COOKIES_FILE=/caminho/para/cookies.txt` ao ambiente do processo.
 
-Os cookies expiram; se voltar a dar erro de bot, exporta de novo e substitui o ficheiro.
+4. **Manutenção**: Os cookies do YouTube expiram e são rotacionados. Se o erro de bot voltar, exporta de novo no browser e substitui o ficheiro no servidor.
+
+**Nota:** Usar conta com yt-dlp pode levar a restrições na conta; usa com moderação ou uma conta secundária.
 
 ---
 
