@@ -289,8 +289,8 @@
       background: var(--accent);
       color: #fff;
     }
-    /* YouTube tab temporarily hidden until server-side auth/cookies support */
-    .input-tab-youtube-hidden { display: none !important; }
+    /* Tabs hidden until YouTube is re-enabled (no second choice); then show both YouTube + File */
+    .input-tabs-hidden { display: none !important; }
     .input-panel { margin-bottom: 0.85rem; }
     .field-select {
       width: 100%;
@@ -373,10 +373,9 @@
   {% endwith %}
 
   <form action="{{ url_for('transcribe') }}" method="post" enctype="multipart/form-data" id="form">
-    <div class="input-tabs" id="inputTabs">
-      <!-- YouTube tab temporarily hidden (works locally; production needs future cookies/auth support) -->
-      <button type="button" class="input-tab input-tab-youtube-hidden" data-input="url">YouTube</button>
-      <button type="button" class="input-tab active" data-input="file">File</button>
+    <div class="input-tabs input-tabs-hidden" id="inputTabs">
+      <button type="button" class="input-tab" data-input="url">YouTube</button>
+      <button type="button" class="input-tab active" data-input="file">Upload File</button>
     </div>
     <div class="input-panel input-panel-url" id="inputPanelUrl" hidden>
       <div class="field">
@@ -386,7 +385,7 @@
     </div>
     <div class="input-panel input-panel-file" id="inputPanelFile">
       <div class="field" id="audioField">
-        <label class="field-label" for="audio">File</label>
+        <label class="field-label" for="audio">Upload File</label>
         <input type="file" name="audio" id="audio" accept=".wav,.mp3,.flac,.ogg,.m4a,.webm">
       </div>
     </div>
