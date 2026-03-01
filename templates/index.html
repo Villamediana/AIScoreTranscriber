@@ -289,6 +289,8 @@
       background: var(--accent);
       color: #fff;
     }
+    /* YouTube tab temporarily hidden until server-side auth/cookies support */
+    .input-tab-youtube-hidden { display: none !important; }
     .input-panel { margin-bottom: 0.85rem; }
     .field-select {
       width: 100%;
@@ -372,16 +374,17 @@
 
   <form action="{{ url_for('transcribe') }}" method="post" enctype="multipart/form-data" id="form">
     <div class="input-tabs" id="inputTabs">
-      <button type="button" class="input-tab active" data-input="url">YouTube</button>
-      <button type="button" class="input-tab" data-input="file">File</button>
+      <!-- YouTube tab temporarily hidden (works locally; production needs future cookies/auth support) -->
+      <button type="button" class="input-tab input-tab-youtube-hidden" data-input="url">YouTube</button>
+      <button type="button" class="input-tab active" data-input="file">File</button>
     </div>
-    <div class="input-panel input-panel-url" id="inputPanelUrl">
+    <div class="input-panel input-panel-url" id="inputPanelUrl" hidden>
       <div class="field">
         <label class="field-label" for="youtube_url">URL</label>
         <input type="url" name="youtube_url" id="youtube_url" placeholder="https://youtube.com/watch?v=...">
       </div>
     </div>
-    <div class="input-panel input-panel-file" id="inputPanelFile" hidden>
+    <div class="input-panel input-panel-file" id="inputPanelFile">
       <div class="field" id="audioField">
         <label class="field-label" for="audio">File</label>
         <input type="file" name="audio" id="audio" accept=".wav,.mp3,.flac,.ogg,.m4a,.webm">
@@ -450,7 +453,7 @@
       <rect x="20" y="10" width="8" height="32" rx="3.5" fill="#7c3aed"/>
       <rect x="34" y="6" width="8" height="36" rx="3.5" fill="#7c3aed"/>
     </svg>
-    <p class="stage-empty-text">Upload a file or paste a URL to get started</p>
+    <p class="stage-empty-text">Upload a file to get started</p>
   </div>
 
   <div class="stage-result" id="stageResult" hidden>
