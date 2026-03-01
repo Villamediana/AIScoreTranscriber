@@ -1790,10 +1790,6 @@
   document.addEventListener('keydown', function (e) {
     var tag = (e.target && e.target.tagName) ? e.target.tagName.toLowerCase() : '';
     if (tag === 'input' || tag === 'textarea' || tag === 'select' || (e.target && e.target.isContentEditable)) return;
-    if (currentView === 'sheet' && (e.code === 'Space' || e.code === 'ArrowLeft' || e.code === 'ArrowRight')) {
-      e.preventDefault();
-      return;
-    }
     if (!stageResult.hidden && (originalPlayer.src || (currentView === 'sheet' && noteEvents.length))) {
       if (e.code === 'Space') {
         e.preventDefault();
@@ -2100,7 +2096,7 @@
       vizWrap.hidden = false;
       vizWrap.style.display = '';
       sizeCanvas();
-      if (playerBar) { playerBar.classList.remove('player-sheet-mode'); playerBar.hidden = false; }
+      if (playerBar) playerBar.classList.remove('player-sheet-mode');
       if (isSheetPlaybackPlaying) stopSheetPlayback();
     } else if (view === 'blank') {
       vizWrap.hidden = true;
@@ -2110,7 +2106,7 @@
       sheetBlankWrap.hidden = false;
       renderBlankSheetContent();
       sheetBlankRendered = true;
-      if (playerBar) { playerBar.classList.remove('player-sheet-mode'); playerBar.hidden = false; }
+      if (playerBar) playerBar.classList.remove('player-sheet-mode');
     } else {
       vizWrap.hidden = true;
       vizWrap.style.display = 'none';
@@ -2122,7 +2118,7 @@
       }
       syncPlayheadDraggable();
       if (sheetPlayheadLayout) updateSheetPlayhead(originalPlayer.currentTime || 0, false);
-      if (playerBar) playerBar.hidden = true;
+      if (playerBar) playerBar.classList.add('player-sheet-mode');
       setPlayPauseIcon(false);
       originalPlayer.pause();
       midiAudioPlayer.pause();
@@ -2893,7 +2889,6 @@
     recordingToggle.setAttribute('aria-checked', 'false');
     stopBlankPlayback();
     blankPlayerBar.hidden = true;
-    if (playerBar) playerBar.hidden = false;
     viewTabs.querySelectorAll('.view-tab').forEach(function (t) {
       t.classList.toggle('active', t.getAttribute('data-view') === 'piano');
     });
