@@ -292,20 +292,88 @@
     /* Tabs hidden until YouTube is re-enabled (no second choice); then show both YouTube + File */
     .input-tabs-hidden { display: none !important; }
     .input-panel { margin-bottom: 0.85rem; }
+    .upload-or-example-row {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      margin-bottom: 0.9rem;
+    }
+    .upload-or-example-row .input-panel-file {
+      margin-bottom: 0;
+    }
+    .upload-or-example-row .input-panel-file .field {
+      margin-bottom: 0;
+    }
+    .upload-or-example-row .example-section {
+      margin-bottom: 0;
+      padding-top: 0;
+    }
+    .upload-or-example-or-wrap {
+      margin: 0;
+      display: block;
+    }
+    .upload-or-example-or {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--text-3);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      text-align: center;
+      display: block;
+      font-family: inherit;
+    }
+    .file-input-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .file-input-native {
+      position: absolute;
+      width: 0.1px;
+      height: 0.1px;
+      opacity: 0;
+      overflow: hidden;
+      z-index: -1;
+    }
+    .file-input-btn {
+      flex: 1;
+      min-width: 0;
+      font-family: inherit;
+      font-size: 0.83rem;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      padding: 0.6rem 0.75rem;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      cursor: pointer;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    .file-input-btn:hover {
+      border-color: var(--accent-l);
+      box-shadow: 0 0 0 3px rgba(124,58,237,0.1);
+    }
+    .file-input-btn:focus {
+      outline: none;
+      border-color: var(--accent-l);
+      box-shadow: 0 0 0 3px rgba(124,58,237,0.1);
+    }
+    .file-input-name {
+      font-size: 0.8rem;
+      color: var(--text-2);
+    }
     .example-section {
       margin-bottom: 0.9rem;
       padding-top: 0.5rem;
       width: 100%;
     }
     .example-section .field { margin-bottom: 0; }
-    .example-or {
-      font-size: 0.7rem;
-      font-weight: 600;
-      color: var(--text-3);
-      text-transform: uppercase;
-      letter-spacing: 0.07em;
-      margin-bottom: 0.38rem;
-    }
     .example-trigger {
       font-family: inherit;
       font-size: 0.83rem;
@@ -642,23 +710,30 @@
         <input type="url" name="youtube_url" id="youtube_url" placeholder="https://youtube.com/watch?v=...">
       </div>
     </div>
-    <div class="input-panel input-panel-file" id="inputPanelFile">
-      <div class="field" id="audioField">
-        <label class="field-label" for="audio">Upload File</label>
-        <input type="file" name="audio" id="audio" accept=".wav,.mp3,.flac,.ogg,.m4a,.webm">
+    <div class="upload-or-example-row">
+      <div class="input-panel input-panel-file" id="inputPanelFile">
+        <div class="field" id="audioField">
+          <div class="file-input-wrap">
+            <input type="file" name="audio" id="audio" accept=".wav,.mp3,.flac,.ogg,.m4a,.webm" class="file-input-native">
+            <button type="button" class="file-input-btn" id="audioChooseBtn">Upload File</button>
+            <span class="file-input-name" id="audioFileName"></span>
+          </div>
+        </div>
+      </div>
+      <div class="upload-or-example-or-wrap">
+        <span class="upload-or-example-or">Or</span>
+      </div>
+      <div class="example-section" id="exampleSection">
+        <div class="field">
+          <button type="button" class="example-trigger" id="exampleTrigger">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+            Try an example
+          </button>
+        </div>
+        <span class="example-selected" id="exampleSelected" hidden></span>
       </div>
     </div>
     <input type="hidden" name="example" id="exampleInput" value="">
-    <div class="example-section" id="exampleSection">
-      <div class="field">
-        <label class="field-label example-or" for="exampleTrigger">Or</label>
-        <button type="button" class="example-trigger" id="exampleTrigger">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
-        Try an example
-      </button>
-      </div>
-      <span class="example-selected" id="exampleSelected" hidden></span>
-    </div>
     <button type="submit" class="btn-submit" id="submitBtn">Transcribe</button>
   </form>
 
@@ -818,6 +893,8 @@
 (function () {
   var form = document.getElementById('form');
   var fileInput = document.getElementById('audio');
+  var audioChooseBtn = document.getElementById('audioChooseBtn');
+  var audioFileName = document.getElementById('audioFileName');
   var ytInput = document.getElementById('youtube_url');
   var submitBtn = document.getElementById('submitBtn');
   var inputTabs = document.getElementById('inputTabs');
@@ -845,6 +922,7 @@
     if (exampleInput) exampleInput.value = filename;
     if (exampleSelected) { exampleSelected.textContent = 'Selected: ' + name; exampleSelected.hidden = false; }
     if (fileInput) fileInput.value = '';
+    if (audioFileName) audioFileName.textContent = '';
     closeExamplesModal();
     if (exampleModalList) exampleModalList.querySelectorAll('.example-modal-item').forEach(function (el) { el.classList.remove('selected'); });
   }
@@ -1018,9 +1096,13 @@
     if (e.key === 'Escape' && examplesModal && examplesModal.classList.contains('open')) closeExamplesModal();
   });
 
-  if (fileInput && exampleInput) {
+  if (audioChooseBtn && fileInput) {
+    audioChooseBtn.addEventListener('click', function () { fileInput.click(); });
+  }
+  if (fileInput) {
     fileInput.addEventListener('change', function () {
-      if (exampleInput.value) {
+      if (audioFileName) audioFileName.textContent = fileInput.files && fileInput.files[0] ? fileInput.files[0].name : '';
+      if (exampleInput && exampleInput.value) {
         exampleInput.value = '';
         if (exampleSelected) exampleSelected.hidden = true;
         if (exampleModalList) exampleModalList.querySelectorAll('.example-modal-item').forEach(function (el) { el.classList.remove('selected'); });
@@ -1042,6 +1124,7 @@
         inputPanelUrl.hidden = false;
         inputPanelFile.hidden = true;
         if (fileInput) fileInput.value = '';
+        if (audioFileName) audioFileName.textContent = '';
       } else {
         inputPanelUrl.hidden = true;
         inputPanelFile.hidden = false;
