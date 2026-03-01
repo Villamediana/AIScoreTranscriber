@@ -38,7 +38,7 @@ YOUTUBE_DOMAINS = {"youtube.com", "www.youtube.com", "m.youtube.com", "youtu.be"
 logger = logging.getLogger("noteai")
 if not logger.handlers:
     handler = logging.StreamHandler()
-    formatter = logging.Formatter("[NoteAI] %(levelname)s | %(message)s")
+    formatter = logging.Formatter("[AI Score Transcriber] %(levelname)s | %(message)s")
     handler.setFormatter(formatter)
     logger.addHandler(handler)
 logger.setLevel(logging.INFO)
@@ -60,7 +60,7 @@ def is_ajax_request() -> bool:
     return request.headers.get("X-Requested-With") == "XMLHttpRequest"
 
 
-def _safe_user_message(msg: str, generic: str = "Ocorreu um erro. Tente novamente.") -> str:
+def _safe_user_message(msg: str, generic: str = "An error occurred. Please try again.") -> str:
     """Retorna mensagem segura para a UI, sem tracebacks ou detalhes técnicos."""
     if not msg:
         return generic
@@ -178,7 +178,7 @@ def synthesize_midi_preview_wav(midi_bytes: bytes) -> Path | None:
         import pretty_midi
         import soundfile as sf
     except ImportError:
-        logger.warning("Dependências para síntese MIDI não disponíveis.")
+        logger.warning("MIDI synthesis dependencies not available.")
         return None
 
     midi_fd, midi_temp = tempfile.mkstemp(suffix=".mid", dir=str(UPLOAD_FOLDER))
@@ -241,7 +241,7 @@ def convert_audio_to_wav(input_audio_path: Path) -> Path:
         import imageio_ffmpeg
     except ImportError as exc:
         raise RuntimeError(
-            "Dependência em falta para converter áudio. Execute: pip install imageio-ffmpeg"
+            "Missing dependency to convert audio. Run: pip install imageio-ffmpeg"
         ) from exc
 
     fd, output_wav = tempfile.mkstemp(suffix=".wav", dir=str(UPLOAD_FOLDER))
@@ -269,7 +269,7 @@ def convert_audio_to_wav(input_audio_path: Path) -> Path:
             output_wav_path.unlink(missing_ok=True)
         print(f"[WAV 1] ERRO: ffmpeg returncode={result.returncode}")
         raise RuntimeError(
-            "Não foi possível processar o áudio deste ficheiro/link. Tente outro vídeo ou formato."
+            "Could not process the audio from this file/link. Try another video or format."
         )
     print(f"[WAV 1] OK: {output_wav_path}")
     return output_wav_path
@@ -281,7 +281,7 @@ def download_youtube_audio(youtube_url: str) -> tuple[Path, str]:
         import yt_dlp
     except ImportError as exc:
         raise RuntimeError(
-            "Dependência em falta: instale 'yt-dlp' para usar URLs do YouTube."
+            "Missing dependency: install 'yt-dlp' to use YouTube URLs."
         ) from exc
 
     output_template = str(UPLOAD_FOLDER / f"{uuid.uuid4().hex}.%(ext)s")
@@ -299,7 +299,7 @@ def download_youtube_audio(youtube_url: str) -> tuple[Path, str]:
 
     audio_path = Path(downloaded_path)
     if not audio_path.exists():
-        raise RuntimeError("Falha ao descarregar o áudio do YouTube.")
+        raise RuntimeError("Failed to download audio from YouTube.")
 
     source_title = secure_filename(info.get("title", "")).strip("_-") or "youtube_audio"
     return audio_path, source_title
@@ -314,13 +314,13 @@ def index():
 def result_media(result_id: str, kind: str):
     cleanup_old_result_files()
     if session.get("active_result_id") != result_id:
-        return jsonify({"error": "Resultado não encontrado para esta sessão."}), 404
+        return jsonify({"error": "Result not found for this session."}), 404
     download = request.args.get("download") == "1"
 
     if kind == "midi":
         target = RESULTS_FOLDER / f"{result_id}_transcribed.mid"
         if not target.exists():
-            return jsonify({"error": "Resultado não encontrado ou expirado."}), 404
+            return jsonify({"error": "Result not found or expired."}), 404
         return send_file(
             str(target),
             mimetype="audio/midi",
@@ -331,7 +331,7 @@ def result_media(result_id: str, kind: str):
     if kind == "original":
         matches = list(RESULTS_FOLDER.glob(f"{result_id}_original.*"))
         if not matches:
-            return jsonify({"error": "Resultado não encontrado ou expirado."}), 404
+            return jsonify({"error": "Result not found or expired."}), 404
         original_path = matches[0]
         return send_file(
             str(original_path),
@@ -342,7 +342,7 @@ def result_media(result_id: str, kind: str):
     if kind == "preview-audio":
         target = RESULTS_FOLDER / f"{result_id}_preview.wav"
         if not target.exists():
-            return jsonify({"error": "Resultado não encontrado ou expirado."}), 404
+            return jsonify({"error": "Result not found or expired."}), 404
         return send_file(
             str(target),
             mimetype="audio/wav",
@@ -353,7 +353,7 @@ def result_media(result_id: str, kind: str):
     if kind == "midi-audio":
         target = RESULTS_FOLDER / f"{result_id}_midi_preview.wav"
         if not target.exists():
-            return jsonify({"error": "Prévia de áudio MIDI não disponível para este resultado."}), 404
+            return jsonify({"error": "MIDI audio preview not available for this result."}), 404
         return send_file(
             str(target),
             mimetype="audio/wav",
@@ -361,7 +361,7 @@ def result_media(result_id: str, kind: str):
             download_name=f"{result_id}_midi_preview.wav",
         )
 
-    return jsonify({"error": "Tipo de media inválido."}), 400
+    return jsonify({"error": "Invalid media type."}), 400
 
 
 @app.route("/results/reset", methods=["POST"])
@@ -373,7 +373,7 @@ def reset_result():
     target_result_id = active_result_id or requested_result_id
 
     if active_result_id and requested_result_id and requested_result_id != active_result_id:
-        return jsonify({"error": "Resultado inválido para esta sessão."}), 400
+        return jsonify({"error": "Invalid result for this session."}), 400
 
     delete_result_assets(target_result_id)
     session.pop("active_result_id", None)
@@ -391,9 +391,9 @@ def transcribe():
     print(f"[STEP 0] Input: has_file={has_file}, has_media_url={has_media_url}, media_url={media_url[:50] if media_url else ''}...")
 
     if has_file and has_media_url:
-        return error_response("Escolha apenas uma opção: ficheiro local ou URL do YouTube.")
+        return error_response("Choose only one option: local file or YouTube URL.")
     if not has_file and not has_media_url:
-        return error_response("Envie um ficheiro de áudio ou informe uma URL do YouTube.")
+        return error_response("Upload an audio file or enter a YouTube URL.")
 
     audio_path = None
     transcription_audio_path = None
@@ -407,14 +407,14 @@ def transcribe():
                 print("[STEP 1a] YouTube detectado")
                 audio_path, base = download_youtube_audio(media_url)
             else:
-                return error_response("URL inválida. Use um link do YouTube.")
+                return error_response("Invalid URL. Use a YouTube link.")
             print(f"[STEP 1] Download OK: audio_path={audio_path}, base={base}")
             logger.info("Download concluído: %s", base)
         else:
             print("[STEP 1] Ficheiro local")
             if not allowed_file(file.filename):
                 return error_response(
-                    f"Formato não permitido. Use: {', '.join(sorted(ALLOWED_EXTENSIONS))}",
+                    f"Format not allowed. Use: {', '.join(sorted(ALLOWED_EXTENSIONS))}",
                 )
 
             ext = file.filename.rsplit(".", 1)[-1].lower()
@@ -492,7 +492,7 @@ def transcribe():
         traceback.print_exc()
         logger.error("Erro inesperado na transcrição: %s", e, exc_info=True)
         return error_response(
-            "Erro na transcrição. Verifique o ficheiro e tente novamente.",
+            "Transcription error. Check the file and try again.",
             status_code=500,
         )
     finally:
@@ -517,7 +517,7 @@ def transcribe():
 def handle_file_too_large(e):
     del e
     max_mb = app.config["MAX_CONTENT_LENGTH"] // (1024 * 1024)
-    return error_response(f"Ficheiro demasiado grande. Limite: {max_mb} MB.", status_code=413)
+    return error_response(f"File too large. Limit: {max_mb} MB.", status_code=413)
 
 
 if __name__ == "__main__":

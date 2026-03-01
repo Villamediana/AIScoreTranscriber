@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}NoteAI — Áudio para MIDI{% endblock %}
+{% block title %}AI Score Transcriber — Audio to MIDI{% endblock %}
 
 {% block head %}
   <script src="https://cdn.jsdelivr.net/npm/@tonejs/midi@2.0.28/build/Midi.js"></script>
@@ -212,7 +212,7 @@
       min-height: 0;
       overflow: auto;
     }
-    /* Ocultar Em branco, modo gravação e result-actions */
+    /* Hide Blank view, recording mode and result-actions */
     .view-tab[data-view="blank"],
     #recordingBar,
     #resultActions { display: none !important; }
@@ -351,7 +351,7 @@
   <form action="{{ url_for('transcribe') }}" method="post" enctype="multipart/form-data" id="form">
     <div class="input-tabs" id="inputTabs">
       <button type="button" class="input-tab active" data-input="url">YouTube</button>
-      <button type="button" class="input-tab" data-input="file">Arquivo</button>
+      <button type="button" class="input-tab" data-input="file">File</button>
     </div>
     <div class="input-panel input-panel-url" id="inputPanelUrl">
       <div class="field">
@@ -361,11 +361,11 @@
     </div>
     <div class="input-panel input-panel-file" id="inputPanelFile" hidden>
       <div class="field" id="audioField">
-        <label class="field-label" for="audio">Arquivo</label>
+        <label class="field-label" for="audio">File</label>
         <input type="file" name="audio" id="audio" accept=".wav,.mp3,.flac,.ogg,.m4a,.webm">
       </div>
     </div>
-    <button type="submit" class="btn-submit" id="submitBtn">Transcrever</button>
+    <button type="submit" class="btn-submit" id="submitBtn">Transcribe</button>
   </form>
 
   <div class="flash-error" id="inlineError" hidden></div>
@@ -375,29 +375,29 @@
     <div class="field">
       <label class="field-label" for="bpmInput">Tempo (BPM)</label>
       <div class="bpm-control">
-        <button type="button" class="bpm-btn" id="bpmMinus" aria-label="Diminuir BPM">−</button>
+        <button type="button" class="bpm-btn" id="bpmMinus" aria-label="Decrease BPM">−</button>
         <input type="number" id="bpmInput" class="bpm-input" min="40" max="240" value="120" step="5" inputmode="numeric">
-        <button type="button" class="bpm-btn" id="bpmPlus" aria-label="Aumentar BPM">+</button>
+        <button type="button" class="bpm-btn" id="bpmPlus" aria-label="Increase BPM">+</button>
       </div>
     </div>
     <div class="field">
-      <label class="field-label" for="volOriginal">Volume Original</label>
+      <label class="field-label" for="volOriginal">Original volume</label>
       <input type="range" class="vol-slider vol-slider-sidebar" id="volOriginal" min="0" max="100" value="80">
     </div>
     <div class="field">
-      <label class="field-label" for="volMidi">Volume MIDI</label>
+      <label class="field-label" for="volMidi">MIDI volume</label>
       <input type="range" class="vol-slider vol-slider-sidebar" id="volMidi" min="0" max="100" value="80">
     </div>
   </div>
 
   <div class="result-actions" id="resultActions" hidden>
     <div style="height:1px;background:var(--border);margin:0.75rem 0 0.6rem;"></div>
-    <button class="btn-action" id="resetBtn">Reiniciar</button>
+    <button class="btn-action" id="resetBtn">Reset</button>
   </div>
 
   <div class="bp-panel bp-collapsed" id="bpPanel" hidden>
     <div class="bp-panel-header" id="bpPanelHeader">
-      <span class="bp-title">Dados das notas</span>
+      <span class="bp-title">Note data</span>
       <svg class="bp-panel-chevron" width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M4 6l4 4 4-4"/></svg>
     </div>
     <div class="bp-panel-content">
@@ -406,10 +406,10 @@
         <table class="bp-table">
           <thead>
             <tr>
-              <th>Início (s)</th>
-              <th>Fim (s)</th>
-              <th>Duração (s)</th>
-              <th>Nota</th>
+              <th>Start (s)</th>
+              <th>End (s)</th>
+              <th>Duration (s)</th>
+              <th>Note</th>
               <th>Pitch</th>
               <th>Conf.</th>
             </tr>
@@ -428,25 +428,25 @@
       <rect x="20" y="10" width="8" height="32" rx="3.5" fill="#7c3aed"/>
       <rect x="34" y="6" width="8" height="36" rx="3.5" fill="#7c3aed"/>
     </svg>
-    <p class="stage-empty-text">Envie um arquivo ou URL para visualizar</p>
+    <p class="stage-empty-text">Upload a file or paste a URL to get started</p>
   </div>
 
   <div class="stage-result" id="stageResult" hidden>
     <div class="view-tabs" id="viewTabs">
       <button class="view-tab active" data-view="piano">Piano</button>
-      <button class="view-tab" data-view="sheet">Partitura</button>
-      <button class="view-tab" data-view="blank">Em branco</button>
+      <button class="view-tab" data-view="sheet">Sheet</button>
+      <button class="view-tab" data-view="blank">Blank</button>
     </div>
     <div class="viz-wrap" id="vizWrap">
       <div class="recording-bar" id="recordingBar">
         <div class="recording-toggle" id="recordingToggle" role="switch" aria-checked="false" tabindex="0"></div>
-        <label for="recordingToggle" id="recordingLabel">Modo gravação</label>
+        <label for="recordingToggle" id="recordingLabel">Recording mode</label>
       </div>
       <canvas id="waterfallCanvas"></canvas>
     </div>
     <div class="sheet-wrap" id="sheetWrap" hidden>
       <div class="sheet-toolbar" id="sheetToolbar">
-        <label class="sheet-ts-label">Compasso:</label>
+        <label class="sheet-ts-label">Time signature:</label>
         <select id="sheetTsNum" class="sheet-ts-select">
           <option value="2">2</option>
           <option value="3">3</option>
@@ -468,7 +468,7 @@
     <div class="sheet-wrap" id="sheetBlankWrap" hidden>
       <div class="sheet-inner" id="sheetBlankInner"></div>
       <div class="blank-player-bar" id="blankPlayerBar" hidden>
-        <button class="player-btn" id="blankPlayBtn" title="Reproduzir gravação">
+        <button class="player-btn" id="blankPlayBtn" title="Play recording">
           <svg id="blankIconPlay" width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><polygon points="4,2 14,8 4,14"/></svg>
           <svg id="blankIconPause" width="16" height="16" viewBox="0 0 16 16" fill="currentColor" hidden><path d="M5 3h2v10H5V3zm6 0h2v10h-2V3z"/></svg>
         </button>
@@ -485,7 +485,7 @@
         <input type="range" class="player-seek" id="playerSeek" min="0" max="1000" value="0">
       </div>
       <div class="vol-divider player-download-sep" id="downloadSep" style="display:none"></div>
-      <a id="midiDownloadBtn" class="player-btn-download" href="#" download title="Baixar MIDI" style="display:none">
+      <a id="midiDownloadBtn" class="player-btn-download" href="#" download title="Download MIDI" style="display:none">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 10l-4-4h2.5V2h3v4H12L8 10zm-4 2h8v2H4v-2z"/></svg>
       </a>
     </div>
@@ -495,7 +495,7 @@
 
   <div class="stage-loading" id="stageLoading" hidden>
     <div class="stage-spinner" aria-hidden="true"></div>
-    <p class="stage-loading-text" id="stageLoadingText">Preparando...</p>
+    <p class="stage-loading-text" id="stageLoadingText">Preparing...</p>
   </div>
 {% endblock %}
 
@@ -1338,13 +1338,13 @@
       if (typeof ev.pitch === 'number') { minP = Math.min(minP, ev.pitch); maxP = Math.max(maxP, ev.pitch); }
       if (typeof ev.confidence === 'number') { cS += ev.confidence; cC++; }
     }
-    bpSummary.textContent = 'Notas: '+(total||list.length)+' | '+pitchToLabel(minP)+'–'+pitchToLabel(maxP)+' | Conf. '+(cC?(cS/cC).toFixed(2):'n/d')+(truncated?' (amostra)':'');
+    bpSummary.textContent = 'Notes: '+(total||list.length)+' | '+pitchToLabel(minP)+'–'+pitchToLabel(maxP)+' | Conf. '+(cC?(cS/cC).toFixed(2):'n/d')+(truncated?' (sample)':'');
     var rows = '';
     for (var r = 0; r < list.length; r++) {
       var it = list[r], st2 = Number(it.start_time||0), en2 = Number(it.end_time||0);
       rows += '<tr><td>'+st2.toFixed(3)+'</td><td>'+en2.toFixed(3)+'</td><td>'+Math.max(0,en2-st2).toFixed(3)+'</td><td>'+pitchToLabel(Number(it.pitch||0))+'</td><td>'+(it.pitch||0)+'</td><td>'+(it.confidence==null?'-':Number(it.confidence).toFixed(2))+'</td></tr>';
     }
-    bpRows.innerHTML = rows || '<tr><td colspan="6" class="bp-empty">Sem eventos.</td></tr>';
+    bpRows.innerHTML = rows || '<tr><td colspan="6" class="bp-empty">No events.</td></tr>';
   }
 
   function stopStatusTicker() {
@@ -1353,8 +1353,8 @@
   function startStatusTicker(hasFile, mediaUrl) {
     stopStatusTicker();
     var phases = hasFile
-      ? ['Enviando arquivo...','Processando áudio...','Transcrevendo para MIDI...','Finalizando...']
-      : ['Baixando do YouTube...','Extraindo áudio...','Transcrevendo para MIDI...','Finalizando...'];
+      ? ['Sending file...','Processing audio...','Transcribing to MIDI...','Finishing...']
+      : ['Downloading from YouTube...','Extracting audio...','Transcribing to MIDI...','Finishing...'];
     var idx = 0;
     function tick() { stageLoadingText.textContent = phases[Math.min(idx, phases.length-1)]; if (idx < phases.length-1) idx++; }
     tick();
@@ -2308,7 +2308,7 @@
     var hasFile = !urlTabActive && fileInput.files && fileInput.files.length > 0;
     var hasUrl = urlTabActive && ytInput.value.trim().length > 0;
     if (!hasFile && !hasUrl) {
-      showError(urlTabActive ? 'Cole uma URL do YouTube.' : 'Selecione um arquivo de áudio.');
+      showError(urlTabActive ? 'Paste a YouTube URL.' : 'Select an audio file.');
       return;
     }
     if (hasUrl) fileInput.value = '';
@@ -2322,7 +2322,7 @@
     clearBasicPitchPanel();
     startStatusTicker(hasFile, hasUrl ? ytInput.value.trim() : null);
     submitBtn.disabled = true;
-    submitBtn.textContent = 'Processando...';
+    submitBtn.textContent = 'Processing...';
 
     var xhr = new XMLHttpRequest();
     xhr.open('POST', form.action, true);
@@ -2331,9 +2331,9 @@
     xhr.responseType = 'blob';
 
     xhr.onreadystatechange = function () {
-      if (xhr.readyState === 2) stageLoadingText.textContent = 'Transcrevendo para MIDI...';
+      if (xhr.readyState === 2) stageLoadingText.textContent = 'Transcribing to MIDI...';
     };
-    function restoreBtn() { submitBtn.disabled = false; submitBtn.textContent = 'Transcrever'; }
+    function restoreBtn() { submitBtn.disabled = false; submitBtn.textContent = 'Transcribe'; }
 
     xhr.onload = function () {
       stopStatusTicker();
@@ -2342,9 +2342,9 @@
       if (xhr.status >= 200 && xhr.status < 300 && ct.includes('application/json')) {
         xhr.response.text().then(function (t) {
           var data = JSON.parse(t);
-          stageLoadingText.textContent = 'Concluído.';
+          stageLoadingText.textContent = 'Done.';
           showResult(data, true);
-        }).catch(function () { showError('Erro ao processar resposta.'); });
+        }).catch(function () { showError('Error processing response.'); });
         return;
       }
       if (xhr.status >= 200 && xhr.status < 300 && ct.includes('audio/midi')) {
@@ -2359,15 +2359,15 @@
       }
       stageLoading.hidden = true; stageEmpty.hidden = false;
       xhr.response.text().then(function (t) {
-        try { showError(JSON.parse(t).error || 'Falha na transcrição.'); }
-        catch (_) { showError('Falha na transcrição. Tente novamente.'); }
-      }).catch(function () { showError('Falha na transcrição.'); });
+        try { showError(JSON.parse(t).error || 'Transcription failed.'); }
+        catch (_) { showError('Transcription failed. Please try again.'); }
+      }).catch(function () { showError('Transcription failed.'); });
     };
 
     xhr.onerror = function () {
       stopStatusTicker(); restoreBtn();
       stageLoading.hidden = true; stageEmpty.hidden = false;
-      showError('Erro de conexão. Verifique sua rede.');
+      showError('Connection error. Check your network.');
     };
     xhr.send(new FormData(form));
   });
