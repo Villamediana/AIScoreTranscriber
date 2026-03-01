@@ -292,6 +292,265 @@
     /* Tabs hidden until YouTube is re-enabled (no second choice); then show both YouTube + File */
     .input-tabs-hidden { display: none !important; }
     .input-panel { margin-bottom: 0.85rem; }
+    .example-section {
+      margin-bottom: 0.9rem;
+      padding-top: 0.5rem;
+      width: 100%;
+    }
+    .example-section .field { margin-bottom: 0; }
+    .example-or {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--text-3);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      margin-bottom: 0.38rem;
+    }
+    .example-trigger {
+      font-family: inherit;
+      font-size: 0.83rem;
+      font-weight: 600;
+      color: var(--accent);
+      background: rgba(124, 58, 237, 0.08);
+      border: 1px solid rgba(124, 58, 237, 0.25);
+      border-radius: 10px;
+      padding: 0.6rem 0.75rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 0.5rem;
+      width: 100%;
+      box-sizing: border-box;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+    }
+    .example-trigger:hover {
+      background: rgba(124, 58, 237, 0.14);
+      border-color: var(--accent);
+      color: #5b21b6;
+    }
+    .example-trigger:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(124,58,237,0.1);
+    }
+    .example-trigger svg { width: 18px; height: 18px; opacity: 0.9; }
+    .example-selected {
+      display: block;
+      font-size: 0.72rem;
+      color: var(--text-2);
+      margin-top: 0.35rem;
+    }
+    .modal-examples .modal-content {
+      width: min(1000px, 96vw);
+      min-height: min(520px, 75vh);
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      box-sizing: border-box;
+    }
+    .modal-examples .modal-body {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-height: 0;
+    }
+    @media (max-width: 640px) {
+      #examplesModal.modal-overlay { padding: 0.75rem; align-items: flex-start; padding-top: 2rem; }
+      .modal-examples .modal-content {
+        width: 100%;
+        max-height: calc(100vh - 2rem);
+        min-height: 400px;
+      }
+      .modal-examples .modal-header { padding: 0.9rem 1rem; }
+      .modal-examples .modal-body { padding: 1rem; }
+      .modal-examples .modal-title { font-size: 0.95rem; }
+    }
+    .example-search-wrap {
+      margin-bottom: 0.9rem;
+    }
+    .example-search {
+      width: 100%;
+      padding: 0.6rem 0.85rem 0.6rem 2.25rem;
+      font-family: inherit;
+      font-size: 0.88rem;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      box-sizing: border-box;
+    }
+    .example-search::placeholder { color: var(--text-3); }
+    .example-search:focus {
+      outline: none;
+      border-color: var(--accent-l);
+      box-shadow: 0 0 0 3px rgba(124,58,237,0.1);
+    }
+    .example-search-wrap { position: relative; }
+    .example-search-wrap::before {
+      content: '';
+      position: absolute;
+      left: 0.85rem;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 16px;
+      height: 16px;
+      background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239ca3af'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'/%3E%3C/svg%3E") center/contain no-repeat;
+    }
+    .example-modal-hint {
+      font-size: 0.78rem;
+      color: var(--text-2);
+      margin-bottom: 0.6rem;
+    }
+    .example-modal-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      overflow-y: auto;
+      flex: 1;
+      min-height: 200px;
+    }
+    .example-modal-item {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      padding: 0.65rem 0.75rem;
+      margin-bottom: 0.5rem;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      transition: background 0.15s, border-color 0.15s;
+      min-width: 0;
+    }
+    .example-modal-item:hover {
+      background: #f5f5fa;
+      border-color: var(--border-2);
+    }
+    .example-modal-item.selected {
+      background: rgba(124, 58, 237, 0.1);
+      border-color: var(--accent);
+    }
+    .example-modal-item.hidden-by-search { display: none; }
+    .example-modal-item .example-top-row {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      min-width: 0;
+      flex-wrap: nowrap;
+    }
+    .example-modal-item .example-info {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      flex-wrap: nowrap;
+    }
+    .example-modal-item .example-player-wrap {
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .example-modal-item .example-name {
+      font-size: 0.88rem;
+      color: var(--text);
+      min-width: 0;
+    }
+    .example-modal-item .example-category {
+      font-size: 0.68rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      color: var(--accent);
+      background: rgba(124, 58, 237, 0.12);
+      padding: 0.18rem 0.45rem;
+      border-radius: 6px;
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+    .example-modal-item .example-stars {
+      font-size: 0.75rem;
+      color: #d4b81e;
+      letter-spacing: 0.08em;
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+    .example-modal-item .example-stars span { color: var(--border-2); }
+    .example-play-btn {
+      flex-shrink: 0;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--text-2);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s, color 0.15s;
+    }
+    .example-play-btn:hover { background: var(--panel); color: var(--accent); }
+    .example-play-btn.playing { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .example-play-btn svg { width: 14px; height: 14px; }
+    .example-play-btn .example-icon-pause { display: none; }
+    .example-play-btn.playing .example-icon-play { display: none; }
+    .example-play-btn.playing .example-icon-pause { display: block; }
+    .example-player-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      width: 100%;
+      min-width: 0;
+    }
+    .example-seek-wrap { flex: 1; min-width: 0; }
+    .example-seek {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 4px;
+      border-radius: 2px;
+      background: var(--border);
+      outline: none;
+      cursor: pointer;
+    }
+    .example-seek::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      background: var(--accent);
+      cursor: pointer;
+    }
+    .example-seek::-moz-range-thumb {
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      background: var(--accent);
+      border: none;
+      cursor: pointer;
+    }
+    .example-time {
+      font-size: 0.7rem;
+      font-variant-numeric: tabular-nums;
+      color: var(--text-2);
+      flex-shrink: 0;
+      min-width: 48px;
+    }
+    .example-choose-btn {
+      flex-shrink: 0;
+      font-family: inherit;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0.4rem 0.75rem;
+      border-radius: 8px;
+      border: none;
+      background: var(--accent);
+      color: #fff;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+    }
+    .example-choose-btn:hover {
+      background: #5b21b6;
+    }
+    .example-choose-btn:active { transform: scale(0.98); }
     .field-select {
       width: 100%;
       padding: 0.6rem 0.75rem;
@@ -385,12 +644,39 @@
     </div>
     <div class="input-panel input-panel-file" id="inputPanelFile">
       <div class="field" id="audioField">
-        <label class="field-label" for="audio">UPLOAD FILE</label>
+        <label class="field-label" for="audio">Upload File</label>
         <input type="file" name="audio" id="audio" accept=".wav,.mp3,.flac,.ogg,.m4a,.webm">
       </div>
     </div>
+    <input type="hidden" name="example" id="exampleInput" value="">
+    <div class="example-section" id="exampleSection">
+      <div class="field">
+        <label class="field-label example-or" for="exampleTrigger">Or</label>
+        <button type="button" class="example-trigger" id="exampleTrigger">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+        Try an example
+      </button>
+      </div>
+      <span class="example-selected" id="exampleSelected" hidden></span>
+    </div>
     <button type="submit" class="btn-submit" id="submitBtn">Transcribe</button>
   </form>
+
+  <div class="modal-overlay" id="examplesModal">
+    <div class="modal-content modal-examples">
+      <div class="modal-header">
+        <span class="modal-title">Choose an example</span>
+        <button type="button" class="modal-close" id="examplesModalClose" aria-label="Close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="example-search-wrap">
+          <input type="text" class="example-search" id="exampleSearch" placeholder="Search examples..." autocomplete="off">
+        </div>
+        <p class="example-modal-hint">Preview with play, then click Choose to use this example.</p>
+        <ul class="example-modal-list" id="exampleModalList"></ul>
+      </div>
+    </div>
+  </div>
 
   <div class="flash-error" id="inlineError" hidden></div>
 
@@ -537,6 +823,213 @@
   var inputTabs = document.getElementById('inputTabs');
   var inputPanelUrl = document.getElementById('inputPanelUrl');
   var inputPanelFile = document.getElementById('inputPanelFile');
+  var exampleInput = document.getElementById('exampleInput');
+  var exampleTrigger = document.getElementById('exampleTrigger');
+  var exampleSection = document.getElementById('exampleSection');
+  var exampleSelected = document.getElementById('exampleSelected');
+  var examplesModal = document.getElementById('examplesModal');
+  var exampleModalList = document.getElementById('exampleModalList');
+  var exampleSearch = document.getElementById('exampleSearch');
+  var examplesModalClose = document.getElementById('examplesModalClose');
+  var examplePreviewAudio = null;
+  var examplePlayBtns = [];
+  var currentExamplePlayer = null;
+
+  function closeExamplesModal() {
+    if (examplesModal) examplesModal.classList.remove('open');
+    if (examplePreviewAudio) { examplePreviewAudio.pause(); examplePreviewAudio.currentTime = 0; }
+    examplePlayBtns.forEach(function (btn) { btn.classList.remove('playing'); });
+    currentExamplePlayer = null;
+  }
+  function selectExample(filename, name) {
+    if (exampleInput) exampleInput.value = filename;
+    if (exampleSelected) { exampleSelected.textContent = 'Selected: ' + name; exampleSelected.hidden = false; }
+    if (fileInput) fileInput.value = '';
+    closeExamplesModal();
+    if (exampleModalList) exampleModalList.querySelectorAll('.example-modal-item').forEach(function (el) { el.classList.remove('selected'); });
+  }
+  function filterExampleList() {
+    var q = (exampleSearch && exampleSearch.value) ? exampleSearch.value.trim().toLowerCase() : '';
+    if (!exampleModalList) return;
+    exampleModalList.querySelectorAll('.example-modal-item').forEach(function (li) {
+      var name = (li.getAttribute('data-name') || '').toLowerCase();
+      var category = (li.getAttribute('data-category') || '').toLowerCase();
+      var match = q.length === 0 || name.indexOf(q) !== -1 || category.indexOf(q) !== -1;
+      li.classList.toggle('hidden-by-search', !match);
+    });
+  }
+
+  if (exampleTrigger && examplesModal) {
+    exampleTrigger.addEventListener('click', function () {
+      examplesModal.classList.add('open');
+      if (exampleSearch) { exampleSearch.value = ''; filterExampleList(); }
+      if (exampleModalList && exampleModalList.children.length === 0) {
+        fetch('/api/examples')
+          .then(function (r) { return r.json(); })
+          .then(function (data) {
+            var examples = data.examples || [];
+            if (examples.length === 0) { closeExamplesModal(); return; }
+            if (exampleSection) exampleSection.hidden = false;
+            examples.forEach(function (ex) {
+              var li = document.createElement('li');
+              li.className = 'example-modal-item';
+              li.setAttribute('data-filename', ex.filename);
+              li.setAttribute('data-name', ex.name);
+              if (ex.category) li.setAttribute('data-category', ex.category);
+              var topRow = document.createElement('div');
+              topRow.className = 'example-top-row';
+              var infoDiv = document.createElement('div');
+              infoDiv.className = 'example-info';
+              var nameSpan = document.createElement('span');
+              nameSpan.className = 'example-name';
+              nameSpan.textContent = ex.name;
+              infoDiv.appendChild(nameSpan);
+              if (ex.category) {
+                var catSpan = document.createElement('span');
+                catSpan.className = 'example-category';
+                catSpan.textContent = ex.category;
+                infoDiv.appendChild(catSpan);
+              }
+              if (ex.difficulty != null && ex.difficulty >= 1 && ex.difficulty <= 5) {
+                var starsSpan = document.createElement('span');
+                starsSpan.className = 'example-stars';
+                var d = Math.round(ex.difficulty);
+                var starsHtml = '';
+                for (var i = 1; i <= 5; i++) starsHtml += i <= d ? '★' : '<span>☆</span>';
+                starsSpan.innerHTML = starsHtml;
+                infoDiv.appendChild(starsSpan);
+              }
+              var playerWrap = document.createElement('div');
+              playerWrap.className = 'example-player-wrap';
+              var playBtn = document.createElement('button');
+              playBtn.type = 'button';
+              playBtn.className = 'example-play-btn';
+              playBtn.setAttribute('aria-label', 'Play');
+              playBtn.innerHTML = '<svg class="example-icon-play" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg><svg class="example-icon-pause" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>';
+              var seekWrap = document.createElement('div');
+              seekWrap.className = 'example-seek-wrap';
+              var seekInput = document.createElement('input');
+              seekInput.type = 'range';
+              seekInput.className = 'example-seek';
+              seekInput.min = 0;
+              seekInput.max = 1000;
+              seekInput.value = 0;
+              var timeEl = document.createElement('span');
+              timeEl.className = 'example-time';
+              timeEl.textContent = '0:00 / 0:00';
+              seekWrap.appendChild(seekInput);
+              playerWrap.appendChild(playBtn);
+              playerWrap.appendChild(seekWrap);
+              playerWrap.appendChild(timeEl);
+              var audioUrl = '/api/examples/audio/' + encodeURIComponent(ex.filename);
+              function fmtTime(s) {
+                if (!s || isNaN(s)) return '0:00';
+                var m = Math.floor(s / 60);
+                var sec = Math.floor(s % 60);
+                return m + ':' + (sec < 10 ? '0' : '') + sec;
+              }
+              function bindRowAudio() {
+                if (!examplePreviewAudio) examplePreviewAudio = new Audio();
+                var isThisRow = examplePreviewAudio.src && examplePreviewAudio.src.indexOf(ex.filename) !== -1;
+
+                if (isThisRow && !examplePreviewAudio.paused) {
+                  currentExamplePlayer = null;
+                  examplePreviewAudio.pause();
+                  playBtn.classList.remove('playing');
+                  return;
+                }
+                if (isThisRow && examplePreviewAudio.paused) {
+                  examplePlayBtns.forEach(function (b) { b.classList.remove('playing'); });
+                  currentExamplePlayer = { seekInput: seekInput, timeEl: timeEl, playBtn: playBtn };
+                  playBtn.classList.add('playing');
+                  examplePreviewAudio.play();
+                  return;
+                }
+
+                if (currentExamplePlayer) {
+                  currentExamplePlayer.playBtn.classList.remove('playing');
+                  currentExamplePlayer.seekInput.value = 0;
+                  currentExamplePlayer.timeEl.textContent = '0:00 / 0:00';
+                }
+                examplePlayBtns.forEach(function (b) { b.classList.remove('playing'); });
+                currentExamplePlayer = { seekInput: seekInput, timeEl: timeEl, playBtn: playBtn };
+                examplePreviewAudio.src = audioUrl;
+                examplePreviewAudio.play();
+                playBtn.classList.add('playing');
+                seekInput.value = 0;
+                timeEl.textContent = '0:00 / 0:00';
+                examplePreviewAudio.onloadedmetadata = function () {
+                  timeEl.textContent = '0:00 / ' + fmtTime(examplePreviewAudio.duration);
+                };
+                examplePreviewAudio.ontimeupdate = function () {
+                  if (!examplePreviewAudio.duration) return;
+                  seekInput.value = Math.floor((examplePreviewAudio.currentTime / examplePreviewAudio.duration) * 1000);
+                  timeEl.textContent = fmtTime(examplePreviewAudio.currentTime) + ' / ' + fmtTime(examplePreviewAudio.duration);
+                };
+                examplePreviewAudio.onended = function () {
+                  playBtn.classList.remove('playing');
+                  seekInput.value = 0;
+                  timeEl.textContent = '0:00 / ' + fmtTime(examplePreviewAudio.duration);
+                };
+              }
+              playBtn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                bindRowAudio();
+              });
+              seekInput.addEventListener('input', function (e) {
+                e.stopPropagation();
+                if (examplePreviewAudio && examplePreviewAudio.src && examplePreviewAudio.src.indexOf(ex.filename) !== -1 && examplePreviewAudio.duration) {
+                  examplePreviewAudio.currentTime = (parseInt(seekInput.value, 10) / 1000) * examplePreviewAudio.duration;
+                }
+              });
+              seekInput.addEventListener('click', function (e) { e.stopPropagation(); });
+              examplePlayBtns.push(playBtn);
+              var chooseBtn = document.createElement('button');
+              chooseBtn.type = 'button';
+              chooseBtn.className = 'example-choose-btn';
+              chooseBtn.textContent = 'Choose';
+              chooseBtn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                selectExample(ex.filename, ex.name);
+                exampleModalList.querySelectorAll('.example-modal-item').forEach(function (el) { el.classList.remove('selected'); });
+                li.classList.add('selected');
+              });
+              topRow.appendChild(infoDiv);
+              topRow.appendChild(chooseBtn);
+              li.appendChild(topRow);
+              li.appendChild(playerWrap);
+              if (exampleInput && exampleInput.value === ex.filename) li.classList.add('selected');
+              exampleModalList.appendChild(li);
+            });
+          })
+          .catch(function () { closeExamplesModal(); });
+      }
+    });
+  }
+  if (exampleSearch) {
+    exampleSearch.addEventListener('input', filterExampleList);
+    exampleSearch.addEventListener('keydown', function (e) { e.stopPropagation(); });
+  }
+  if (examplesModalClose) examplesModalClose.addEventListener('click', closeExamplesModal);
+  if (examplesModal) {
+    examplesModal.addEventListener('click', function (e) { if (e.target === examplesModal) closeExamplesModal(); });
+  }
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && examplesModal && examplesModal.classList.contains('open')) closeExamplesModal();
+  });
+
+  if (fileInput && exampleInput) {
+    fileInput.addEventListener('change', function () {
+      if (exampleInput.value) {
+        exampleInput.value = '';
+        if (exampleSelected) exampleSelected.hidden = true;
+        if (exampleModalList) exampleModalList.querySelectorAll('.example-modal-item').forEach(function (el) { el.classList.remove('selected'); });
+      }
+    });
+  }
+  fetch('/api/examples').then(function (r) { return r.json(); }).then(function (data) {
+    if (!data.examples || data.examples.length === 0) { if (exampleSection) exampleSection.hidden = true; }
+  }).catch(function () { if (exampleSection) exampleSection.hidden = true; });
 
   if (inputTabs) {
     inputTabs.addEventListener('click', function (e) {
@@ -2411,12 +2904,14 @@
     var urlTabActive = inputPanelFile.hidden;
     var hasFile = !urlTabActive && fileInput.files && fileInput.files.length > 0;
     var hasUrl = urlTabActive && ytInput.value.trim().length > 0;
-    if (!hasFile && !hasUrl) {
-      showError(urlTabActive ? 'Paste a YouTube URL.' : 'Select an audio file.');
+    var hasExample = exampleInput && exampleInput.value.trim().length > 0;
+    if (!hasFile && !hasUrl && !hasExample) {
+      showError(urlTabActive ? 'Paste a YouTube URL.' : 'Select an audio file or choose an example.');
       return;
     }
-    if (hasUrl) fileInput.value = '';
-    else ytInput.value = '';
+    if (hasUrl) { fileInput.value = ''; if (exampleInput) exampleInput.value = ''; }
+    else if (hasExample) fileInput.value = '';
+    else { ytInput.value = ''; if (exampleInput) exampleInput.value = ''; }
 
     stageResult.hidden = true;
     stageEmpty.hidden = true;
@@ -2424,7 +2919,7 @@
     resultActions.hidden = true;
     volumeControls.hidden = true;
     clearBasicPitchPanel();
-    startStatusTicker(hasFile, hasUrl ? ytInput.value.trim() : null);
+    startStatusTicker(hasFile || hasExample, hasUrl ? ytInput.value.trim() : null);
     submitBtn.disabled = true;
     submitBtn.textContent = 'Processing...';
 

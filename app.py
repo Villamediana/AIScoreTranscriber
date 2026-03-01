@@ -32,6 +32,7 @@ UPLOAD_FOLDER = Path(app.root_path) / "uploads"
 UPLOAD_FOLDER.mkdir(exist_ok=True)
 RESULTS_FOLDER = Path(app.root_path) / "results"
 RESULTS_FOLDER.mkdir(exist_ok=True)
+EXAMPLE_FOLDER = Path(app.root_path) / "example"
 ALLOWED_EXTENSIONS = {"wav", "mp3", "flac", "ogg", "m4a", "webm"}
 YOUTUBE_DOMAINS = {"youtube.com", "www.youtube.com", "m.youtube.com", "youtu.be", "www.youtu.be"}
 
@@ -404,20 +405,98 @@ def reset_result():
     return jsonify({"ok": True})
 
 
+def _load_example_metadata() -> dict:
+    """Carrega example/metadata.json: lista de { "song": "nome.mp3", "category": "...", "difficulty": 1-5 }."""
+    meta_path = EXAMPLE_FOLDER / "metadata.json"
+    if not meta_path.is_file():
+        return {}
+    try:
+        import json
+        with open(meta_path, encoding="utf-8") as f:
+            data = json.load(f)
+        out = {}
+        if isinstance(data, list):
+            for item in data:
+                if isinstance(item, dict) and item.get("song"):
+                    name = item["song"].strip()
+                    if name:
+                        out[name] = {
+                            "category": (item.get("category") or "").strip() or None,
+                            "difficulty": item.get("difficulty"),
+                        }
+        elif isinstance(data, dict):
+            for k, v in data.items():
+                if isinstance(v, dict) and k:
+                    out[k] = {"category": v.get("category"), "difficulty": v.get("difficulty")}
+        return out
+    except (json.JSONDecodeError, OSError):
+        return {}
+
+
+@app.route("/api/examples", methods=["GET"])
+def list_examples():
+    """Lista ficheiros de áudio na pasta example (nome, filename, ext, category, difficulty)."""
+    if not EXAMPLE_FOLDER.is_dir():
+        return jsonify({"examples": []})
+    meta = _load_example_metadata()
+    examples = []
+    for p in sorted(EXAMPLE_FOLDER.iterdir()):
+        if p.is_file() and allowed_file(p.name):
+            name = p.stem.replace("_", " ").strip()
+            ext = p.suffix.lower()
+            info = meta.get(p.name) or {}
+            category = (info.get("category") or "").strip() or None
+            difficulty = info.get("difficulty")
+            if difficulty is not None:
+                try:
+                    d = int(difficulty)
+                    difficulty = max(1, min(5, d))
+                except (TypeError, ValueError):
+                    difficulty = None
+            examples.append({
+                "name": name,
+                "filename": p.name,
+                "ext": ext,
+                "category": category,
+                "difficulty": difficulty,
+            })
+    return jsonify({"examples": examples})
+
+
+def _audio_mimetype(filename: str) -> str:
+    ext = (Path(filename).suffix or "").lower()
+    mime = {"mp3": "audio/mpeg", "wav": "audio/wav", "flac": "audio/flac", "ogg": "audio/ogg", "m4a": "audio/mp4", "webm": "audio/webm"}
+    return mime.get(ext.lstrip("."), "application/octet-stream")
+
+
+@app.route("/api/examples/audio/<path:filename>", methods=["GET"])
+def serve_example_audio(filename: str):
+    """Serve um ficheiro de áudio da pasta example para preview (reprodução)."""
+    safe = Path(filename).name
+    if not safe or safe != filename:
+        return jsonify({"error": "Invalid filename"}), 400
+    file_path = EXAMPLE_FOLDER / safe
+    if not file_path.is_file() or not allowed_file(safe):
+        return jsonify({"error": "Not found"}), 404
+    return send_file(str(file_path), mimetype=_audio_mimetype(safe), as_attachment=False)
+
+
 @app.route("/transcribe", methods=["POST"])
 def transcribe():
     print("[STEP 0] transcribe() iniciado")
     cleanup_old_result_files()
     file = request.files.get("audio")
     media_url = (request.form.get("youtube_url") or request.form.get("media_url") or "").strip()
+    example_filename = (request.form.get("example") or "").strip()
     has_file = bool(file and file.filename)
     has_media_url = bool(media_url)
-    print(f"[STEP 0] Input: has_file={has_file}, has_media_url={has_media_url}, media_url={media_url[:50] if media_url else ''}...")
+    has_example = bool(example_filename)
+    print(f"[STEP 0] Input: has_file={has_file}, has_media_url={has_media_url}, has_example={has_example}, example={example_filename!r}")
 
-    if has_file and has_media_url:
-        return error_response("Choose only one option: local file or YouTube URL.")
-    if not has_file and not has_media_url:
-        return error_response("Upload an audio file or enter a YouTube URL.")
+    if sum([has_file, has_media_url, has_example]) > 1:
+        return error_response("Choose only one: upload a file, paste a URL, or pick an example.")
+    if not has_file and not has_media_url and not has_example:
+        return error_response("Upload an audio file, enter a YouTube URL, or choose an example.")
 
     audio_path = None
     transcription_audio_path = None
@@ -425,7 +504,19 @@ def transcribe():
     base = "audio"
 
     try:
-        if has_media_url:
+        if has_example:
+            safe_example = Path(example_filename).name
+            example_path = EXAMPLE_FOLDER / safe_example
+            if not example_path.is_file() or not allowed_file(safe_example):
+                return error_response("Invalid example.")
+            # Copiar para uploads para reutilizar o mesmo fluxo (e limpar no finally)
+            safe_name = f"{uuid.uuid4().hex}_{safe_example}"
+            audio_path = UPLOAD_FOLDER / safe_name
+            shutil.copy2(str(example_path), str(audio_path))
+            base = secure_filename(Path(safe_example).stem) or "audio"
+            print(f"[STEP 1] Example usado: {safe_example} -> {audio_path}")
+            logger.info("Exemplo usado: %s", base)
+        elif has_media_url:
             print("[STEP 1] A obter áudio da URL...")
             if is_youtube_url(media_url):
                 print("[STEP 1a] YouTube detectado")
