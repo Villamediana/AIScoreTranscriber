@@ -80,6 +80,27 @@ NoteAIs/
 
 ---
 
+## Production: YouTube em servidor
+
+Em servidores (VPS, cloud), o YouTube pode bloquear descarregamentos com *"Sign in to confirm you're not a bot"*. Para contornar:
+
+1. **Exportar cookies** do YouTube no teu browser (formato Netscape):
+   - Extensão [Get cookies.txt LOCALLY](https://github.com/rotemdan/ExportCookies) (Chrome/Edge) ou [cookies.txt](https://addons.mozilla.org/en-US/firefox/addon/cookies-txt/) (Firefox).
+   - Abre youtube.com, faz login se precisar, e exporta para `cookies.txt`.
+
+2. **Enviar o ficheiro** para o servidor (ex.: `/root/AIScoreTranscriber/cookies.txt`).
+
+3. **Definir a variável de ambiente** antes de correr a app:
+   ```bash
+   export YOUTUBE_COOKIES_FILE=/root/AIScoreTranscriber/cookies.txt
+   python app.py
+   ```
+   Ou no systemd/PM2: coloca `YOUTUBE_COOKIES_FILE=/caminho/para/cookies.txt` no ambiente do processo.
+
+Os cookies expiram; se voltar a dar erro de bot, exporta de novo e substitui o ficheiro.
+
+---
+
 ## Dependencies
 
 | Purpose | Dependency |

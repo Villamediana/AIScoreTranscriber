@@ -50,6 +50,12 @@ logging.getLogger("tensorflow").setLevel(logging.ERROR)
 logging.getLogger("absl").setLevel(logging.ERROR)
 logging.getLogger("werkzeug").setLevel(logging.WARNING)
 warnings.filterwarnings("ignore", category=FutureWarning, module=r".*librosa.*")
+warnings.filterwarnings("ignore", message=r".*urllib3.*doesn't match.*")
+try:
+    from requests.exceptions import RequestsDependencyWarning
+    warnings.filterwarnings("ignore", category=RequestsDependencyWarning)
+except ImportError:
+    pass
 
 
 def allowed_file(filename: str) -> bool:
@@ -291,7 +297,24 @@ def download_youtube_audio(youtube_url: str) -> tuple[Path, str]:
         "noplaylist": True,
         "quiet": True,
         "no_warnings": True,
+        # Reduz deteção de bot em servidores (YouTube pode pedir login)
+        "extractor_args": {"youtube": {"player_client": ["android", "web"]}},
+        "http_headers": {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Accept-Language": "en-US,en;q=0.9",
+        },
     }
+
+    # Cookies: em produção, o YouTube muitas vezes bloqueia sem sessão.
+    # Definir YOUTUBE_COOKIES_FILE para o caminho de um ficheiro cookies.txt (Netscape).
+    cookies_path = os.environ.get("YOUTUBE_COOKIES_FILE", "").strip()
+    if cookies_path:
+        cookie_file = Path(cookies_path)
+        if cookie_file.is_file():
+            ydl_opts["cookiefile"] = str(cookie_file)
+            logger.info("A usar ficheiro de cookies para o YouTube.")
+        else:
+            logger.warning("YOUTUBE_COOKIES_FILE definido mas ficheiro não existe: %s", cookies_path)
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(youtube_url, download=True)
