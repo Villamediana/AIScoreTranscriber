@@ -2,6 +2,8 @@
 
 Web app that turns **audio into MIDI and sheet music** using the open source library [Basic Pitch](https://github.com/spotify/basic-pitch). Upload an audio file → **piano roll**, **sheet music** (PDF downloadable), **playback**, and **MIDI** download.
 
+**Live demo:** [https://aiscoretranscriber.com/](https://aiscoretranscriber.com/)
+
 ---
 
 ## About
@@ -77,6 +79,12 @@ NoteAIs/
     ├── base.html              # Layout, logo, about modal
     └── index.html             # Form, Piano/Sheet views, players, note table, PDF export
 ```
+
+---
+
+## Screenshots
+
+Screenshots of the app are in the [`screenshots/`](https://github.com/Villamediana/AIScoreTranscriber/tree/main/screenshots) folder. Add your captures there and reference them in the README or in issues/PRs as needed.
 
 ---
 
