@@ -293,7 +293,8 @@ def download_youtube_audio(youtube_url: str) -> tuple[Path, str]:
 
     output_template = str(UPLOAD_FOLDER / f"{uuid.uuid4().hex}.%(ext)s")
     ydl_opts = {
-        "format": "bestaudio/best",
+        # Vários fallbacks: alguns vídeos não têm "bestaudio"; ba=best audio, b=best
+        "format": "bestaudio[ext=m4a]/bestaudio[ext=webm]/bestaudio/best/ba/b",
         "outtmpl": output_template,
         "noplaylist": True,
         "quiet": True,
