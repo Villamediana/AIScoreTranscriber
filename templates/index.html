@@ -1317,8 +1317,8 @@
     currentExamplePlayer = null;
   }
   function clearExampleSelectedInLists() {
-    clearExampleSelectedInLists();
     if (exampleInlineList) exampleInlineList.querySelectorAll('.example-inline-item').forEach(function (el) { el.classList.remove('selected'); });
+    if (exampleModalList) exampleModalList.querySelectorAll('.example-modal-item').forEach(function (el) { el.classList.remove('selected'); });
   }
   function selectExample(filename, name) {
     if (exampleInput) exampleInput.value = filename;
