@@ -85,5 +85,9 @@ htmlcov/
 .tox/
 .nox/
 
+# === Text files (exceto requirements) ===
+*.txt
+!requirements.txt
+
 # === OneDrive (evitar conflitos) ===
 *.lnk
