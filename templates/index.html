@@ -1042,13 +1042,13 @@
     </div>
     <div class="input-panel input-panel-url" id="inputPanelUrl" {% if not youtube_enabled %}hidden{% endif %}>
       <div class="field">
-        <input type="url" name="youtube_url" id="youtube_url" placeholder="https://youtube.com/watch?v=...">
+        <input type="url" name="youtube_url" id="youtube_url" placeholder="https://youtube.com/watch?v=..." aria-label="YouTube URL">
       </div>
     </div>
     <div class="upload-or-example-row">
       <div class="input-panel input-panel-file" id="inputPanelFile" {% if youtube_enabled %}hidden{% endif %}>
         <div class="field" id="audioField">
-          <input type="file" name="audio" id="audio" accept="audio/*,.wav,.mp3,.flac,.ogg,.m4a,.webm,audio/wav,audio/mpeg,audio/flac,audio/ogg,audio/mp4,audio/webm" class="file-input-native">
+          <input type="file" name="audio" id="audio" accept="audio/*,.wav,.mp3,.flac,.ogg,.m4a,.webm,audio/wav,audio/mpeg,audio/flac,audio/ogg,audio/mp4,audio/webm" class="file-input-native" aria-label="Upload audio file">
           <div class="file-drop-zone" id="fileDropZone">
             <div class="file-drop-empty" id="fileDropEmpty">
               <svg class="file-drop-empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -1138,10 +1138,10 @@
 {% block mobile_bar %}
   <div class="mobile-bottom-bar" id="mobileBottomBar">
     <span class="mobile-selected-name" id="mobileExampleSelected" hidden></span>
-    <label for="audio" class="mobile-bar-btn mobile-bar-upload" title="Upload file">
+    <button type="button" class="mobile-bar-btn mobile-bar-upload" id="mobileUploadBtn" title="Upload file" aria-label="Upload audio file">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
       <span class="mobile-bar-label">Upload</span>
-    </label>
+    </button>
     {% if youtube_enabled %}
     <button type="button" class="mobile-bar-btn mobile-bar-youtube" id="mobileYoutubeBtn" title="Paste YouTube link">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
@@ -1473,8 +1473,12 @@
     });
   }
 
+  var mobileUploadBtn = document.getElementById('mobileUploadBtn');
   var mobileExampleBtn = document.getElementById('mobileExampleBtn');
   var mobileSubmitBtn = document.getElementById('mobileSubmitBtn');
+  if (mobileUploadBtn && fileInput) {
+    mobileUploadBtn.addEventListener('click', function () { fileInput.click(); });
+  }
   if (mobileExampleBtn && exampleTrigger) {
     mobileExampleBtn.addEventListener('click', function () { exampleTrigger.click(); });
   }

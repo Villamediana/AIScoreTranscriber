@@ -624,11 +624,12 @@
         overflow-x: hidden;
       }
       .player-bar {
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
         gap: 0.4rem;
         padding: 0.5rem 0.6rem;
+        min-width: 0;
       }
-      .player-seek-wrap { order: 10; width: 100%; flex-basis: 100%; }
+      .player-seek-wrap { flex: 1; min-width: 0; }
       .vol-divider { display: none; }
     }
   </style>
