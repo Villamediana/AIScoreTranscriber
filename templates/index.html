@@ -424,7 +424,11 @@
       min-height: 0;
     }
     @media (max-width: 640px) {
-      #examplesModal.modal-overlay { padding: 0.75rem; align-items: flex-start; padding-top: 2rem; }
+      #examplesModal.modal-overlay {
+        padding: 0.75rem;
+        align-items: center;
+        justify-content: center;
+      }
       .modal-examples .modal-content {
         width: 100%;
         max-height: calc(100vh - 2rem);
@@ -435,6 +439,7 @@
       .modal-examples .modal-title { font-size: 0.95rem; }
     }
     .example-search-wrap {
+      display: none;
       margin-bottom: 0.9rem;
     }
     .example-search {
@@ -687,6 +692,135 @@
     }
     .vol-slider-sidebar::-webkit-slider-thumb { background: var(--accent); }
     .vol-slider-sidebar::-moz-range-thumb { background: var(--accent); }
+
+    /* Mobile-only bottom bar (same breakpoint as base) */
+    .mobile-bottom-bar {
+      display: none;
+    }
+    @media (max-width: 680px) {
+      .mobile-bottom-bar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 0.6rem 1rem;
+        padding-bottom: calc(0.6rem + env(safe-area-inset-bottom, 0));
+        background: var(--sidebar-bg);
+        border-top: 1px solid var(--border);
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 100;
+        box-sizing: border-box;
+      }
+      .mobile-bar-btn {
+        display: flex;
+        flex: 1;
+        min-width: 0;
+        align-items: center;
+        justify-content: center;
+        gap: 0.35rem;
+        padding: 0.5rem 0.75rem;
+        font-family: inherit;
+        font-size: 0.8rem;
+        font-weight: 500;
+        color: var(--text-2);
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        transition: background 0.15s, color 0.15s, border-color 0.15s;
+      }
+      .mobile-bar-btn:hover {
+        background: #eeeef3;
+        color: var(--text);
+        border-color: var(--border-2);
+      }
+      .mobile-bar-btn:focus {
+        outline: none;
+        border-color: var(--accent-l);
+        box-shadow: 0 0 0 3px rgba(124,58,237,0.1);
+      }
+      .mobile-bar-example {
+        color: var(--accent);
+        background: rgba(124, 58, 237, 0.08);
+        border-color: rgba(124, 58, 237, 0.25);
+      }
+      .mobile-bar-example:hover {
+        background: rgba(124, 58, 237, 0.14);
+        border-color: var(--accent);
+        color: #5b21b6;
+      }
+      .mobile-bar-example:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(124,58,237,0.1);
+      }
+      .mobile-bar-btn svg { flex-shrink: 0; }
+      .mobile-bar-label { white-space: nowrap; }
+      .mobile-bar-transcribe {
+        width: 100%;
+        flex: 1 1 100%;
+        min-width: 0;
+        padding: 0.6rem 1rem;
+        font-family: inherit;
+        font-size: 0.86rem;
+        font-weight: 600;
+        color: #fff;
+        background: var(--grad);
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        box-shadow: 0 2px 14px rgba(124,58,237,0.3);
+        -webkit-tap-highlight-color: transparent;
+        transition: opacity 0.15s, transform 0.1s;
+      }
+      .mobile-bar-transcribe:hover:not(:disabled) {
+        opacity: 0.92;
+        transform: translateY(-1px);
+      }
+      .mobile-bar-transcribe:active:not(:disabled) { transform: translateY(0); }
+      .mobile-bar-transcribe:disabled {
+        opacity: 0.35;
+        cursor: not-allowed;
+      }
+      .mobile-bar-transcribe {
+        display: none !important;
+      }
+      .mobile-selected-name {
+        width: 100%;
+        flex: 1 1 100%;
+        font-size: 0.75rem;
+        color: var(--accent);
+        font-weight: 600;
+        padding: 0.25rem 0 0.4rem;
+        text-align: center;
+      }
+      .viz-wrap,
+      .stage-result,
+      .sheet-wrap,
+      .sheet-wrap .sheet-inner-wrap {
+        min-width: 0;
+      }
+      .view-tabs {
+        min-width: 0;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      .player-bar {
+        min-width: 0;
+      }
+      .sidebar-body .upload-or-example-row,
+      .sidebar-body .btn-submit {
+        display: none !important;
+      }
+      .sidebar-body .input-tabs,
+      .sidebar-body .input-panel-url {
+        display: none !important;
+      }
+    }
   </style>
 {% endblock %}
 
@@ -727,7 +861,7 @@
         <div class="field">
           <button type="button" class="example-trigger" id="exampleTrigger">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
-            Try an example
+            Choose sample
           </button>
         </div>
         <span class="example-selected" id="exampleSelected" hidden></span>
@@ -736,22 +870,6 @@
     <input type="hidden" name="example" id="exampleInput" value="">
     <button type="submit" class="btn-submit" id="submitBtn">Transcribe</button>
   </form>
-
-  <div class="modal-overlay" id="examplesModal">
-    <div class="modal-content modal-examples">
-      <div class="modal-header">
-        <span class="modal-title">Choose an example</span>
-        <button type="button" class="modal-close" id="examplesModalClose" aria-label="Close">&times;</button>
-      </div>
-      <div class="modal-body">
-        <div class="example-search-wrap">
-          <input type="text" class="example-search" id="exampleSearch" placeholder="Search examples..." autocomplete="off">
-        </div>
-        <p class="example-modal-hint">Preview with play, then click Choose to use this example.</p>
-        <ul class="example-modal-list" id="exampleModalList"></ul>
-      </div>
-    </div>
-  </div>
 
   <div class="flash-error" id="inlineError" hidden></div>
 
@@ -806,7 +924,50 @@
   </div>
 {% endblock %}
 
+{% block mobile_bar %}
+  <div class="mobile-bottom-bar" id="mobileBottomBar">
+    <span class="mobile-selected-name" id="mobileExampleSelected" hidden></span>
+    <label for="audio" class="mobile-bar-btn mobile-bar-upload" title="Upload file">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      <span class="mobile-bar-label">Upload</span>
+    </label>
+    <button type="button" class="mobile-bar-btn mobile-bar-example" id="mobileExampleBtn" title="Choose a sample">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      <span class="mobile-bar-label">Choose sample</span>
+    </button>
+    <button type="submit" form="form" class="mobile-bar-transcribe" id="mobileSubmitBtn">Transcribe</button>
+  </div>
+{% endblock %}
+
 {% block stage %}
+  <div class="modal-overlay" id="examplesModal">
+    <div class="modal-content modal-examples">
+      <div class="modal-header">
+        <span class="modal-title">Choose an example</span>
+        <button type="button" class="modal-close" id="examplesModalClose" aria-label="Close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="example-search-wrap">
+          <input type="text" class="example-search" id="exampleSearch" placeholder="Search examples..." autocomplete="off">
+        </div>
+        <p class="example-modal-hint">Preview with play, then click Choose to use this example.</p>
+        <ul class="example-modal-list" id="exampleModalList"></ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="sheetDesktopOnlyModal" aria-hidden="true">
+    <div class="modal-content">
+      <div class="modal-header">
+        <span class="modal-title">Sheet view</span>
+        <button type="button" class="modal-close" id="sheetDesktopOnlyModalClose" aria-label="Close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>Sheet view is only available on desktop for now. Open this page on a computer to view the score.</p>
+      </div>
+    </div>
+  </div>
+
   <div class="stage-empty" id="stageEmpty">
     <svg class="stage-empty-icon" width="48" height="48" viewBox="0 0 48 48" fill="none" style="opacity:0.18">
       <rect x="6" y="22" width="8" height="20" rx="3.5" fill="#7c3aed"/>
@@ -921,10 +1082,15 @@
   function selectExample(filename, name) {
     if (exampleInput) exampleInput.value = filename;
     if (exampleSelected) { exampleSelected.textContent = 'Selected: ' + name; exampleSelected.hidden = false; }
+    var mobileExampleSelected = document.getElementById('mobileExampleSelected');
+    if (mobileExampleSelected) { mobileExampleSelected.textContent = 'Selected: ' + name; mobileExampleSelected.hidden = false; }
     if (fileInput) fileInput.value = '';
     if (audioFileName) audioFileName.textContent = '';
     closeExamplesModal();
     if (exampleModalList) exampleModalList.querySelectorAll('.example-modal-item').forEach(function (el) { el.classList.remove('selected'); });
+    if (window.matchMedia('(max-width: 680px)').matches && form && typeof form.requestSubmit === 'function') {
+      setTimeout(function () { form.requestSubmit(); }, 100);
+    }
   }
   function filterExampleList() {
     var q = (exampleSearch && exampleSearch.value) ? exampleSearch.value.trim().toLowerCase() : '';
@@ -937,6 +1103,11 @@
     });
   }
 
+  var mobileExampleBtn = document.getElementById('mobileExampleBtn');
+  var mobileSubmitBtn = document.getElementById('mobileSubmitBtn');
+  if (mobileExampleBtn && exampleTrigger) {
+    mobileExampleBtn.addEventListener('click', function () { exampleTrigger.click(); });
+  }
   if (exampleTrigger && examplesModal) {
     exampleTrigger.addEventListener('click', function () {
       examplesModal.classList.add('open');
@@ -1103,7 +1274,12 @@
       if (exampleInput && exampleInput.value) {
         exampleInput.value = '';
         if (exampleSelected) exampleSelected.hidden = true;
+        var mobileEx = document.getElementById('mobileExampleSelected');
+        if (mobileEx) { mobileEx.textContent = ''; mobileEx.hidden = true; }
         if (exampleModalList) exampleModalList.querySelectorAll('.example-modal-item').forEach(function (el) { el.classList.remove('selected'); });
+      }
+      if (window.matchMedia('(max-width: 680px)').matches && fileInput.files && fileInput.files.length > 0 && form && typeof form.requestSubmit === 'function') {
+        setTimeout(function () { form.requestSubmit(); }, 100);
       }
     });
   }
@@ -1213,7 +1389,8 @@
   var MIN_PITCH = 21;
   var MAX_PITCH = 108;
   var BLACK_SET = {1:1, 3:1, 6:1, 8:1, 10:1};
-  var PIANO_H = 80;
+  function getPianoH() { return window.innerWidth <= 680 ? 48 : 80; }
+  var PIANO_H = getPianoH();
   var LOOK_AHEAD = 3;
 
   var NOTE_GRAD_COLORS = [
@@ -1569,6 +1746,7 @@
     var w = rect.width;
     var h = rect.height;
     if (w < 1 || h < 1) { animId = requestAnimationFrame(drawFrame); return; }
+    PIANO_H = getPianoH();
 
     ctx.clearRect(0, 0, w, h);
 
@@ -1693,6 +1871,17 @@
       cachedKeyMap = null;
       cachedW = 0;
       if (!stageResult.hidden) sizeCanvas();
+      if (currentView === 'sheet' && sheetWrap && !sheetWrap.hidden && noteEvents.length) {
+        sheetRendered = false;
+        renderSheetMusic(noteEvents);
+        sheetRendered = true;
+        if (sheetPlayheadLayout) updateSheetPlayhead(originalPlayer.currentTime || 0, false);
+      }
+      if (currentView === 'blank' && sheetBlankWrap && !sheetBlankWrap.hidden) {
+        sheetBlankRendered = false;
+        renderBlankSheetContent();
+        sheetBlankRendered = true;
+      }
     }, 100);
   });
 
@@ -2084,6 +2273,11 @@
     if (!btn) return;
     var view = btn.getAttribute('data-view');
     if (view === currentView) return;
+    if (view === 'sheet' && window.matchMedia('(max-width: 680px)').matches) {
+      var sheetDesktopModal = document.getElementById('sheetDesktopOnlyModal');
+      if (sheetDesktopModal) sheetDesktopModal.classList.add('open');
+      return;
+    }
     currentView = view;
     viewTabs.querySelectorAll('.view-tab').forEach(function (t) { t.classList.remove('active'); });
     btn.classList.add('active');
@@ -2111,8 +2305,12 @@
       sheetBlankWrap.hidden = true;
       sheetWrap.hidden = false;
       if (!sheetRendered && noteEvents.length) {
-        renderSheetMusic(noteEvents);
-        sheetRendered = true;
+        var doRender = function () {
+          renderSheetMusic(noteEvents);
+          sheetRendered = true;
+          if (sheetPlayheadLayout) updateSheetPlayhead(originalPlayer.currentTime || 0, false);
+        };
+        requestAnimationFrame(function () { requestAnimationFrame(doRender); });
       }
       syncPlayheadDraggable();
       if (sheetPlayheadLayout) updateSheetPlayhead(originalPlayer.currentTime || 0, false);
@@ -2122,6 +2320,23 @@
       midiAudioPlayer.pause();
     }
   });
+
+  (function () {
+    var sheetDesktopModal = document.getElementById('sheetDesktopOnlyModal');
+    var sheetDesktopClose = document.getElementById('sheetDesktopOnlyModalClose');
+    function closeSheetDesktopModal() {
+      if (sheetDesktopModal) sheetDesktopModal.classList.remove('open');
+    }
+    if (sheetDesktopClose) sheetDesktopClose.addEventListener('click', closeSheetDesktopModal);
+    if (sheetDesktopModal) {
+      sheetDesktopModal.addEventListener('click', function (e) {
+        if (e.target === sheetDesktopModal) closeSheetDesktopModal();
+      });
+    }
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && sheetDesktopModal && sheetDesktopModal.classList.contains('open')) closeSheetDesktopModal();
+    });
+  })();
 
   /* ── Sheet Music Rendering (VexFlow) ── */
   var MIDI_NAMES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
@@ -2343,26 +2558,48 @@
     var VF = Vex.Flow;
     var bpm = estimateBPM(events);
     var measures = buildMeasures(events, bpm, ts, dur);
-    var staveWidth = 280;
-    var measPerLine = Math.max(1, Math.floor((wrap.clientWidth - 80) / staveWidth));
+    var containerW = wrap.clientWidth || 0;
+    if (containerW < 100) {
+      var stageEl = document.getElementById('stage');
+      containerW = (stageEl && stageEl.clientWidth) || (typeof window !== 'undefined' ? window.innerWidth : 400) || 400;
+    }
+    containerW = containerW || 400;
+    var isNarrow = containerW < 520;
+    var staveWidth, lineH, bassOffset, padH, padV, fontSize;
+    if (isNarrow) {
+      staveWidth = Math.min(280, Math.max(160, containerW - 80));
+      var scale = staveWidth / 280;
+      lineH = Math.round(280 * scale);
+      bassOffset = Math.round(120 * scale);
+      padH = 40;
+      padV = 20;
+      fontSize = Math.max(8, Math.round(10 * scale));
+    } else {
+      staveWidth = 280;
+      lineH = 280;
+      bassOffset = 120;
+      padH = 40;
+      padV = 20;
+      fontSize = 10;
+    }
+    var measPerLine = Math.max(1, Math.floor((containerW - padH * 2) / staveWidth));
     var lines = Math.ceil(measures.length / measPerLine);
-    var totalW = measPerLine * staveWidth + 80;
-    var lineH = 280;
-    var totalH = lines * lineH + 40;
+    var totalW = measPerLine * staveWidth + padH * 2;
+    var totalH = lines * lineH + padV * 2;
 
     var renderer = new VF.Renderer(inner, VF.Renderer.Backends.SVG);
     renderer.resize(totalW, totalH);
     var context = renderer.getContext();
-    context.setFont('Inter', 10);
+    context.setFont('Inter', fontSize);
 
     for (var line = 0; line < lines; line++) {
-      var y = line * lineH + 20;
+      var y = line * lineH + padV;
       var startM = line * measPerLine;
       var endM = Math.min(startM + measPerLine, measures.length);
 
       for (var mi = startM; mi < endM; mi++) {
         var mIdx = mi - startM;
-        var x = mIdx * staveWidth + 40;
+        var x = mIdx * staveWidth + padH;
         var m = measures[mi];
         var isFirst = mIdx === 0;
 
@@ -2376,7 +2613,7 @@
         }
 
         var trebleStave = new VF.Stave(x, y, staveWidth);
-        var bassStave = new VF.Stave(x, y + 120, staveWidth);
+        var bassStave = new VF.Stave(x, y + bassOffset, staveWidth);
 
         if (isFirst) {
           trebleStave.addClef('treble').addTimeSignature(num + '/' + denom);
@@ -2463,14 +2700,15 @@
       clearSheetNoteGlows();
       var totalDur = events.length ? Math.max.apply(null, events.map(function (e) { return Number(e.end_time); })) : 0;
       if (dur > 0) totalDur = Math.max(totalDur, dur);
-      var systemH = 240;
-      sheetPlayheadLayout = { measPerLine: measPerLine, lineH: lineH, staveWidth: staveWidth, totalH: totalH, totalDuration: totalDur, systemH: systemH };
+      var systemH = bassOffset + Math.round(100 * (staveWidth / 280));
+      sheetPlayheadLayout = { measPerLine: measPerLine, lineH: lineH, staveWidth: staveWidth, totalH: totalH, totalDuration: totalDur, systemH: systemH, padV: padV, padH: padH };
       if (sheetPlayhead) sheetPlayhead.hidden = true;
     }
   }
 
   function sheetTimeToMeasureAndX(time) {
-    if (!sheetPlayheadLayout || !sheetMeasurePositions.length) return { mi: 0, x: 40 };
+    var padH = (sheetPlayheadLayout && sheetPlayheadLayout.padH != null) ? sheetPlayheadLayout.padH : 40;
+    if (!sheetPlayheadLayout || !sheetMeasurePositions.length) return { mi: 0, x: padH };
     for (var i = 0; i < sheetMeasurePositions.length; i++) {
       var m = sheetMeasurePositions[i];
       if (time >= m.startTime && time < m.endTime) {
@@ -2488,13 +2726,14 @@
   function sheetXToTime(contentX, contentY) {
     if (!sheetPlayheadLayout || !sheetMeasurePositions.length) return 0;
     var L = sheetPlayheadLayout, mpl = L.measPerLine, sh = L.lineH, sw = L.staveWidth;
-    var line = Math.max(0, Math.floor((contentY - 20) / sh));
-    var col = Math.floor((contentX - 40) / sw);
+    var padV = L.padV != null ? L.padV : 20, padH = L.padH != null ? L.padH : 40;
+    var line = Math.max(0, Math.floor((contentY - padV) / sh));
+    var col = Math.floor((contentX - padH) / sw);
     col = Math.max(0, Math.min(col, mpl - 1));
     var mi = line * mpl + col;
     if (mi >= sheetMeasurePositions.length) return sheetPlayheadLayout.totalDuration || 0;
     var m = sheetMeasurePositions[mi];
-    var frac = ((contentX - 40) % sw) / sw;
+    var frac = ((contentX - padH) % sw) / sw;
     frac = Math.max(0, Math.min(1, frac));
     return m.startTime + frac * (m.endTime - m.startTime);
   }
@@ -2534,7 +2773,8 @@
     var lineH = sheetPlayheadLayout.lineH || 280;
     var systemH = sheetPlayheadLayout.systemH || 240;
     var lineIdx = Math.floor(info.mi / mpl);
-    var sysTop = lineIdx * lineH + 20;
+    var padV = sheetPlayheadLayout.padV != null ? sheetPlayheadLayout.padV : 20;
+    var sysTop = lineIdx * lineH + padV;
     var padLeft = sheetInner ? (parseFloat(getComputedStyle(sheetInner).paddingLeft) || 16) : 16;
     var padTop = sheetInner ? (parseFloat(getComputedStyle(sheetInner).paddingTop) || 19) : 19;
     sheetPlayhead.style.left = (padLeft + info.x - 1) + 'px';
@@ -2674,27 +2914,44 @@
     sheetBlankInner.innerHTML = '';
     if (typeof Vex === 'undefined' || !Vex.Flow) return;
     var VF = Vex.Flow;
-    var staveWidth = 280;
+    var wrapW = (sheetBlankWrap && sheetBlankWrap.clientWidth) || 400;
+    var isNarrow = wrapW < 520;
+    var staveWidth, lineH, bassOffset, padH, padV, fontSize;
+    if (isNarrow) {
+      staveWidth = Math.min(280, Math.max(160, wrapW - 80));
+      var scale = staveWidth / 280;
+      lineH = Math.round(280 * scale);
+      bassOffset = Math.round(120 * scale);
+      padH = 40;
+      padV = 20;
+      fontSize = Math.max(8, Math.round(10 * scale));
+    } else {
+      staveWidth = 280;
+      lineH = 280;
+      bassOffset = 120;
+      padH = 40;
+      padV = 20;
+      fontSize = 10;
+    }
     var numMeasures = 12;
-    var measPerLine = 3;
+    var measPerLine = Math.max(1, Math.min(3, Math.floor((wrapW - padH * 2) / staveWidth)));
     var lines = Math.ceil(numMeasures / measPerLine);
-    var lineH = 280;
-    var totalW = measPerLine * staveWidth + 80;
-    var totalH = lines * lineH + 40;
+    var totalW = measPerLine * staveWidth + padH * 2;
+    var totalH = lines * lineH + padV * 2;
     var renderer = new VF.Renderer(sheetBlankInner, VF.Renderer.Backends.SVG);
     renderer.resize(totalW, totalH);
     var context = renderer.getContext();
-    context.setFont('Inter', 10);
+    context.setFont('Inter', fontSize);
     for (var line = 0; line < lines; line++) {
-      var y = line * lineH + 20;
+      var y = line * lineH + padV;
       var startM = line * measPerLine;
       var endM = Math.min(startM + measPerLine, numMeasures);
       for (var mi = startM; mi < endM; mi++) {
         var mIdx = mi - startM;
-        var x = mIdx * staveWidth + 40;
+        var x = mIdx * staveWidth + padH;
         var isFirst = mIdx === 0;
         var trebleStave = new VF.Stave(x, y, staveWidth);
-        var bassStave = new VF.Stave(x, y + 120, staveWidth);
+        var bassStave = new VF.Stave(x, y + bassOffset, staveWidth);
         if (isFirst) {
           trebleStave.addClef('treble').addTimeSignature('4/4');
           bassStave.addClef('bass').addTimeSignature('4/4');
@@ -3014,6 +3271,7 @@
     startStatusTicker(hasFile || hasExample, hasUrl ? ytInput.value.trim() : null);
     submitBtn.disabled = true;
     submitBtn.textContent = 'Processing...';
+    if (mobileSubmitBtn) { mobileSubmitBtn.disabled = true; mobileSubmitBtn.textContent = 'Processing...'; }
 
     var xhr = new XMLHttpRequest();
     xhr.open('POST', form.action, true);
@@ -3025,7 +3283,11 @@
     xhr.onreadystatechange = function () {
       if (xhr.readyState === 2) stageLoadingText.textContent = 'Transcribing to MIDI...';
     };
-    function restoreBtn() { submitBtn.disabled = false; submitBtn.textContent = 'Transcribe'; }
+    function restoreBtn() {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Transcribe';
+      if (mobileSubmitBtn) { mobileSubmitBtn.disabled = false; mobileSubmitBtn.textContent = 'Transcribe'; }
+    }
 
     xhr.onload = function () {
       stopStatusTicker();
