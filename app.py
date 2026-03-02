@@ -330,6 +330,27 @@ def download_youtube_audio(youtube_url: str) -> tuple[Path, str]:
     return audio_path, source_title
 
 
+@app.after_request
+def add_cors_headers(response):
+    """Allow cross-origin requests so mobile/tablet work when URL differs (e.g. IP vs hostname)."""
+    origin = request.environ.get("HTTP_ORIGIN")
+    if origin:
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+    else:
+        response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Accept, X-Requested-With"
+    return response
+
+
+
+@app.route("/transcribe", methods=["OPTIONS"])
+def transcribe_options():
+    """CORS preflight for POST /transcribe (needed by some browsers on mobile/tablet)."""
+    return "", 204
+
+
 @app.route("/")
 def index():
     return render_template("index.html")

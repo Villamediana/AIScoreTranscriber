@@ -2990,6 +2990,17 @@
       showError(urlTabActive ? 'Paste a YouTube URL.' : 'Select an audio file or choose an example.');
       return;
     }
+    if (hasFile && fileInput.files[0]) {
+      var size = fileInput.files[0].size;
+      if (size === 0) {
+        showError('The selected file is empty. Choose another file.');
+        return;
+      }
+      if (size > 50 * 1024 * 1024) {
+        showError('File too large (max 50 MB). Try a shorter track.');
+        return;
+      }
+    }
     if (hasUrl) { fileInput.value = ''; if (exampleInput) exampleInput.value = ''; }
     else if (hasExample) fileInput.value = '';
     else { ytInput.value = ''; if (exampleInput) exampleInput.value = ''; }
@@ -3058,7 +3069,13 @@
     xhr.onerror = function () {
       stopStatusTicker(); restoreBtn();
       stageLoading.hidden = true; stageEmpty.hidden = false;
-      showError('Connection error. If the file is large or the connection is slow, try a shorter file or Wi‑Fi.');
+      var msg = 'Connection failed. ';
+      if (xhr.status === 0) {
+        msg += 'Use the same address as on desktop (e.g. https://…), check Wi‑Fi, or try a smaller file.';
+      } else {
+        msg += 'If the file is large or the connection is slow, try a shorter file or Wi‑Fi.';
+      }
+      showError(msg);
     };
     xhr.send(new FormData(form));
   });
