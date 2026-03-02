@@ -8,6 +8,7 @@ werkzeug>=3.0.0
 music21>=9.0.0
 python-dotenv>=1.0.1
 yt-dlp>=2025.1.0
+yt-dlp-ejs  # necessário para YouTube em yt-dlp 2025.11+ (lista completa de formatos)
 imageio-ffmpeg>=0.5.1
 
 # Audio stack (compatível com TensorFlow 2.14 no Python 3.10)

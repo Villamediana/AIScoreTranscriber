@@ -302,6 +302,9 @@ def download_youtube_audio(youtube_url: str) -> tuple[Path, str]:
         "postprocessors": [
             {"key": "FFmpegExtractAudio", "preferredcodec": "m4a", "preferredquality": "0"},
         ],
+        # yt-dlp 2025.11+: necessário para obter lista completa de formatos no YouTube (JS challenge)
+        # Requer: pip install yt-dlp-ejs e um runtime JS (Deno/Node) no sistema
+        "remote_components": ["ejs:github"],
         # Clientes que não exigem PO Token; tv_simply/tv costumam funcionar melhor em servidores
         # Ver: https://github.com/yt-dlp/yt-dlp/wiki/Extractors#youtube
         "extractor_args": {"youtube": {"player_client": ["tv_simply", "tv", "android", "web"]}},
