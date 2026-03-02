@@ -1139,8 +1139,8 @@
     if (exampleSelected) { exampleSelected.textContent = 'Selected: ' + name; exampleSelected.hidden = false; }
     var mobileExampleSelected = document.getElementById('mobileExampleSelected');
     if (mobileExampleSelected) { mobileExampleSelected.textContent = 'Selected: ' + name; mobileExampleSelected.hidden = false; }
-    if (fileInput) fileInput.value = '';
-    if (audioFileName) audioFileName.textContent = '';
+    if (fileInput) { fileInput.value = ''; if (audioFileName) audioFileName.textContent = ''; }
+    if (ytInput) ytInput.value = '';
     closeExamplesModal();
     if (exampleModalList) exampleModalList.querySelectorAll('.example-modal-item').forEach(function (el) { el.classList.remove('selected'); });
     if (window.matchMedia('(max-width: 680px)').matches && form && typeof form.requestSubmit === 'function') {
@@ -1374,6 +1374,7 @@
   if (fileInput) {
     fileInput.addEventListener('change', function () {
       if (audioFileName) audioFileName.textContent = fileInput.files && fileInput.files[0] ? fileInput.files[0].name : '';
+      if (ytInput) ytInput.value = '';
       if (exampleInput && exampleInput.value) {
         exampleInput.value = '';
         if (exampleSelected) exampleSelected.hidden = true;
@@ -1400,12 +1401,25 @@
       if (mode === 'url') {
         inputPanelUrl.hidden = false;
         inputPanelFile.hidden = true;
-        if (fileInput) fileInput.value = '';
-        if (audioFileName) audioFileName.textContent = '';
+        if (fileInput) { fileInput.value = ''; if (audioFileName) audioFileName.textContent = ''; }
+        if (exampleInput && exampleInput.value) {
+          exampleInput.value = '';
+          if (exampleSelected) exampleSelected.hidden = true;
+          var mobileEx = document.getElementById('mobileExampleSelected');
+          if (mobileEx) { mobileEx.textContent = ''; mobileEx.hidden = true; }
+          if (exampleModalList) exampleModalList.querySelectorAll('.example-modal-item').forEach(function (el) { el.classList.remove('selected'); });
+        }
       } else {
         inputPanelUrl.hidden = true;
         inputPanelFile.hidden = false;
         if (ytInput) ytInput.value = '';
+        if (exampleInput && exampleInput.value) {
+          exampleInput.value = '';
+          if (exampleSelected) exampleSelected.hidden = true;
+          var mobileEx = document.getElementById('mobileExampleSelected');
+          if (mobileEx) { mobileEx.textContent = ''; mobileEx.hidden = true; }
+          if (exampleModalList) exampleModalList.querySelectorAll('.example-modal-item').forEach(function (el) { el.classList.remove('selected'); });
+        }
       }
     });
   }
