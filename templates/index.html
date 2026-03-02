@@ -9,6 +9,17 @@
     window.TONE_SILENCE_VERSION_LOGGING = true;
   </script>
   <style>
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
     .bp-panel {
       margin-top: 0.8rem;
       border: 1px solid var(--border);
@@ -991,13 +1002,7 @@
         display: none !important;
       }
       .mobile-selected-name {
-        width: 100%;
-        flex: 1 1 100%;
-        font-size: 0.75rem;
-        color: var(--accent);
-        font-weight: 600;
-        padding: 0.25rem 0 0.4rem;
-        text-align: center;
+        display: none !important;
       }
       .viz-wrap,
       .stage-result,
@@ -1048,7 +1053,8 @@
     <div class="upload-or-example-row">
       <div class="input-panel input-panel-file" id="inputPanelFile" {% if youtube_enabled %}hidden{% endif %}>
         <div class="field" id="audioField">
-          <input type="file" name="audio" id="audio" accept="audio/*,.wav,.mp3,.flac,.ogg,.m4a,.webm,audio/wav,audio/mpeg,audio/flac,audio/ogg,audio/mp4,audio/webm" class="file-input-native" aria-label="Upload audio file">
+          <label for="audio" class="visually-hidden">Upload audio file</label>
+          <input type="file" name="audio" id="audio" accept="audio/*,.wav,.mp3,.flac,.ogg,.m4a,.webm,audio/wav,audio/mpeg,audio/flac,audio/ogg,audio/mp4,audio/webm" class="file-input-native">
           <div class="file-drop-zone" id="fileDropZone">
             <div class="file-drop-empty" id="fileDropEmpty">
               <svg class="file-drop-empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
