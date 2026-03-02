@@ -3733,8 +3733,7 @@
     stopStatusTicker();
     stopAnimation();
 
-    var urlTabActive = inputPanelFile.hidden;
-    var hasFile = !urlTabActive && fileInput.files && fileInput.files.length > 0;
+    var hasFile = fileInput && fileInput.files && fileInput.files.length > 0;
     var hasUrl = ytInput && ytInput.value.trim().length > 0;
     var hasExample = exampleInput && exampleInput.value.trim().length > 0;
     if (!hasFile && !hasUrl && !hasExample) {
