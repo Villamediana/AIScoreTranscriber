@@ -291,14 +291,18 @@ def download_youtube_audio(youtube_url: str) -> tuple[Path, str]:
             "Missing dependency: install 'yt-dlp' to use YouTube URLs."
         ) from exc
 
-    output_template = str(UPLOAD_FOLDER / f"{uuid.uuid4().hex}.%(ext)s")
+    out_id = uuid.uuid4().hex
+    output_template = str(UPLOAD_FOLDER / f"{out_id}.%(ext)s")
     ydl_opts = {
-        # Vários fallbacks: alguns vídeos não têm "bestaudio"; ba=best audio, b=best
-        "format": "bestaudio[ext=m4a]/bestaudio[ext=webm]/bestaudio/best/ba/b",
+        # Qualquer formato disponível; depois extraímos áudio com FFmpeg (funciona com vídeos restritos)
+        "format": "best/b/worst",
         "outtmpl": output_template,
         "noplaylist": True,
         "quiet": True,
         "no_warnings": True,
+        "postprocessors": [
+            {"key": "FFmpegExtractAudio", "preferredcodec": "m4a", "preferredquality": "0"},
+        ],
         # Clientes que não exigem PO Token; tv_simply/tv costumam funcionar melhor em servidores
         # Ver: https://github.com/yt-dlp/yt-dlp/wiki/Extractors#youtube
         "extractor_args": {"youtube": {"player_client": ["tv_simply", "tv", "android", "web"]}},
@@ -324,6 +328,9 @@ def download_youtube_audio(youtube_url: str) -> tuple[Path, str]:
         downloaded_path = ydl.prepare_filename(info)
 
     audio_path = Path(downloaded_path)
+    # FFmpegExtractAudio converte para .m4a; o ficheiro final pode ter extensão diferente
+    if not audio_path.exists():
+        audio_path = audio_path.with_suffix(".m4a")
     if not audio_path.exists():
         raise RuntimeError("Failed to download audio from YouTube.")
 
