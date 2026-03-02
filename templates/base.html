@@ -228,6 +228,8 @@
     .modal-body p { margin-bottom: 0.9rem; }
     .modal-body p:last-child { margin-bottom: 0; }
     .modal-body strong { color: var(--text); }
+    .modal-body a { color: var(--accent); text-decoration: none; font-weight: 500; }
+    .modal-body a:hover { text-decoration: underline; }
 
     .sidebar-body {
       padding: 0 1.25rem 1.25rem;
@@ -674,9 +676,12 @@
         <button type="button" class="modal-close" id="aboutModalClose" aria-label="Close">&times;</button>
       </div>
       <div class="modal-body">
-        <p>Sometimes we can't find the piano score for a specific piece, which makes practice harder. <strong>AI Score Transcriber</strong> helps with that.</p>
-        <p>Upload an audio file and the app generates a piano roll view and MIDI file to practice with. It works like a piano tutorial for any piece.</p>
-        <p><strong>Works best</strong> with instrumental or piano music, but you can try any audio.</p>
+        <p><strong>AI Score Transcriber</strong> turns audio into a piano roll and MIDI so you can see and practice any piece, even when the score isn’t available.</p>
+        <p>Paste a <strong>YouTube URL</strong> or <strong>upload an audio file</strong>; you get a playable roll, sheet-style view, and MIDI download. Best with instrumental or piano, but any audio works.</p>
+        <p style="margin-top:1rem;">
+          <strong>Demo:</strong> <a href="https://youtu.be/LQq88k3vV4Y" target="_blank" rel="noopener noreferrer">youtu.be/LQq88k3vV4Y</a><br>
+          <strong>Repo:</strong> <a href="https://github.com/Villamediana/AIScoreTranscriber" target="_blank" rel="noopener noreferrer">github.com/Villamediana/AIScoreTranscriber</a>
+        </p>
       </div>
     </div>
   </div>
@@ -686,12 +691,19 @@
       var btn = document.getElementById('aboutModalBtn');
       var modal = document.getElementById('aboutModal');
       var closeBtn = document.getElementById('aboutModalClose');
+      var storageKey = 'aiscoretranscriber_about_seen';
       if (btn && modal) {
         btn.addEventListener('click', function() { modal.classList.add('open'); });
         function closeModal() { modal.classList.remove('open'); }
         if (closeBtn) closeBtn.addEventListener('click', closeModal);
         modal.addEventListener('click', function(e) { if (e.target === modal) closeModal(); });
         document.addEventListener('keydown', function(e) { if (e.key === 'Escape' && modal.classList.contains('open')) closeModal(); });
+        try {
+          if (!localStorage.getItem(storageKey)) {
+            modal.classList.add('open');
+            localStorage.setItem(storageKey, '1');
+          }
+        } catch (e) {}
       }
       var shell = document.querySelector('.shell');
       var sidebarToggle = document.getElementById('sidebarToggle');

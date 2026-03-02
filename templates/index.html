@@ -308,20 +308,7 @@
       margin-bottom: 0;
       padding-top: 0;
     }
-    .upload-or-example-or-wrap {
-      margin: 0;
-      display: block;
-    }
-    .upload-or-example-or {
-      font-size: 0.7rem;
-      font-weight: 600;
-      color: var(--text-3);
-      text-transform: uppercase;
-      letter-spacing: 0.07em;
-      text-align: center;
-      display: block;
-      font-family: inherit;
-    }
+    .input-panel-example.example-section { margin-top: 0; padding-top: 0; }
     .file-input-wrap {
       display: flex;
       align-items: center;
@@ -368,6 +355,103 @@
       font-size: 0.8rem;
       color: var(--text-2);
     }
+    .file-drop-zone {
+      border: 2px dashed var(--border);
+      border-radius: 12px;
+      padding: 1.25rem 1rem;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      background: var(--panel);
+      min-height: 100px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+    .file-drop-zone:hover,
+    .file-drop-zone.drag-over {
+      border-color: var(--accent);
+      background: rgba(124, 58, 237, 0.04);
+    }
+    .file-drop-empty {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      width: 100%;
+      text-align: center;
+    }
+    .file-drop-zone .file-drop-empty-icon {
+      width: 40px;
+      height: 40px;
+      color: var(--text-3);
+      opacity: 0.9;
+      flex-shrink: 0;
+    }
+    .file-drop-zone .file-drop-empty-text {
+      font-size: 0.8rem;
+      color: var(--text-2);
+      font-weight: 500;
+    }
+    .file-drop-zone .file-drop-empty-hint {
+      font-size: 0.65rem;
+      color: var(--text-3);
+      line-height: 1.3;
+    }
+    .file-drop-zone.has-file {
+      padding: 0.85rem 1rem;
+      min-height: 0;
+    }
+    .file-drop-preview {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      width: 100%;
+      max-width: 100%;
+      text-align: left;
+      padding: 0.5rem 0.65rem;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      box-sizing: border-box;
+    }
+    .file-drop-preview-icon {
+      width: 36px;
+      height: 36px;
+      flex-shrink: 0;
+      border-radius: 8px;
+      background: rgba(124, 58, 237, 0.12);
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .file-drop-preview-icon svg {
+      width: 20px;
+      height: 20px;
+    }
+    .file-drop-preview-info {
+      min-width: 0;
+      flex: 1;
+    }
+    .file-drop-preview-name {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .file-drop-preview-meta {
+      display: block;
+      font-size: 0.65rem;
+      color: var(--text-3);
+      margin-top: 0.2rem;
+      line-height: 1.3;
+    }
     .example-section {
       margin-bottom: 0.9rem;
       padding-top: 0.5rem;
@@ -403,6 +487,90 @@
       box-shadow: 0 0 0 3px rgba(124,58,237,0.1);
     }
     .example-trigger svg { width: 18px; height: 18px; opacity: 0.9; }
+    .example-inline-list {
+      display: none;
+      list-style: none;
+      padding: 0;
+      margin: 0 0 0.5rem 0;
+      max-height: 280px;
+      overflow-y: auto;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--panel);
+    }
+    .example-inline-list::-webkit-scrollbar { width: 6px; }
+    .example-inline-list::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 3px; }
+    .example-inline-item {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      padding: 0.6rem 0.75rem;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.82rem;
+    }
+    .example-inline-item:last-child { border-bottom: none; }
+    .example-inline-item:hover { background: rgba(124, 58, 237, 0.04); }
+    .example-inline-item.selected { background: rgba(124, 58, 237, 0.1); }
+    .example-inline-item .example-inline-top-row {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      min-width: 0;
+    }
+    .example-inline-item .example-inline-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .example-inline-item .example-inline-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-top: 0.2rem;
+    }
+    .example-inline-item .example-inline-name { font-weight: 600; color: var(--text); }
+    .example-inline-item .example-inline-cat {
+      display: inline-block;
+      font-size: 0.68rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      color: var(--accent);
+      background: rgba(124, 58, 237, 0.12);
+      padding: 0.18rem 0.45rem;
+      border-radius: 6px;
+      white-space: nowrap;
+    }
+    .example-inline-item .example-inline-stars {
+      font-size: 0.75rem;
+      color: #d4b81e;
+      letter-spacing: 0.08em;
+    }
+    .example-inline-item .example-inline-stars span { color: var(--border-2); }
+    .example-inline-item .example-inline-player {
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .example-inline-item .example-inline-choose {
+      flex-shrink: 0;
+      padding: 0.35rem 0.65rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--accent);
+      background: rgba(124, 58, 237, 0.1);
+      border: 1px solid rgba(124, 58, 237, 0.25);
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .example-inline-item .example-inline-choose:hover { background: rgba(124, 58, 237, 0.18); }
+    @media (min-width: 681px) {
+      .example-section .example-trigger-wrap { display: none !important; }
+      .example-inline-list { display: block; }
+    }
+    @media (max-width: 680px) {
+      .example-inline-list { display: none !important; }
+    }
     .example-selected {
       display: block;
       font-size: 0.72rem;
@@ -867,36 +1035,46 @@
   {% endwith %}
 
   <form action="{{ url_for('transcribe') }}" method="post" enctype="multipart/form-data" id="form">
-    <div class="input-tabs {% if not youtube_enabled %}input-tabs-hidden{% endif %}" id="inputTabs">
-      <button type="button" class="input-tab" data-input="url">YouTube</button>
-      <button type="button" class="input-tab active" data-input="file">Files</button>
+    <div class="input-tabs" id="inputTabs">
+      {% if youtube_enabled %}<button type="button" class="input-tab active" data-input="url">YouTube</button>{% endif %}
+      <button type="button" class="input-tab {% if not youtube_enabled %}active{% endif %}" data-input="file">Files</button>
+      <button type="button" class="input-tab" data-input="example">Sample</button>
     </div>
-    <div class="input-panel input-panel-url" id="inputPanelUrl" hidden>
+    <div class="input-panel input-panel-url" id="inputPanelUrl" {% if not youtube_enabled %}hidden{% endif %}>
       <div class="field">
-        <label class="field-label" for="youtube_url">URL</label>
         <input type="url" name="youtube_url" id="youtube_url" placeholder="https://youtube.com/watch?v=...">
       </div>
     </div>
     <div class="upload-or-example-row">
-      <div class="input-panel input-panel-file" id="inputPanelFile">
+      <div class="input-panel input-panel-file" id="inputPanelFile" {% if youtube_enabled %}hidden{% endif %}>
         <div class="field" id="audioField">
-          <div class="file-input-wrap">
-            <input type="file" name="audio" id="audio" accept="audio/*,.wav,.mp3,.flac,.ogg,.m4a,.webm,audio/wav,audio/mpeg,audio/flac,audio/ogg,audio/mp4,audio/webm" class="file-input-native">
-            <label for="audio" class="file-input-btn" id="audioChooseBtn">Upload File</label>
-            <span class="file-input-name" id="audioFileName"></span>
+          <input type="file" name="audio" id="audio" accept="audio/*,.wav,.mp3,.flac,.ogg,.m4a,.webm,audio/wav,audio/mpeg,audio/flac,audio/ogg,audio/mp4,audio/webm" class="file-input-native">
+          <div class="file-drop-zone" id="fileDropZone">
+            <div class="file-drop-empty" id="fileDropEmpty">
+              <svg class="file-drop-empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              <span class="file-drop-empty-text">Drop audio here or click to browse</span>
+              <span class="file-drop-empty-hint">WAV, MP3, FLAC, OGG, M4A, WEBM · max 50 MB</span>
+            </div>
+            <div class="file-drop-preview" id="fileDropPreview" hidden>
+              <div class="file-drop-preview-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+              </div>
+              <div class="file-drop-preview-info">
+                <div class="file-drop-preview-name" id="fileDropPreviewName"></div>
+                <div class="file-drop-preview-meta" id="fileDropPreviewMeta"></div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-      <div class="upload-or-example-or-wrap">
-        <span class="upload-or-example-or">Or</span>
-      </div>
-      <div class="example-section" id="exampleSection">
-        <div class="field">
+      <div class="example-section input-panel-example" id="exampleSection" hidden>
+        <div class="field example-trigger-wrap">
           <button type="button" class="example-trigger" id="exampleTrigger">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
             Choose sample
           </button>
         </div>
+        <ul class="example-inline-list" id="exampleInlineList" aria-label="Sample list"></ul>
         <span class="example-selected" id="exampleSelected" hidden></span>
       </div>
     </div>
@@ -1109,8 +1287,11 @@
 (function () {
   var form = document.getElementById('form');
   var fileInput = document.getElementById('audio');
-  var audioChooseBtn = document.getElementById('audioChooseBtn');
-  var audioFileName = document.getElementById('audioFileName');
+  var fileDropZone = document.getElementById('fileDropZone');
+  var fileDropEmpty = document.getElementById('fileDropEmpty');
+  var fileDropPreview = document.getElementById('fileDropPreview');
+  var fileDropPreviewName = document.getElementById('fileDropPreviewName');
+  var fileDropPreviewMeta = document.getElementById('fileDropPreviewMeta');
   var ytInput = document.getElementById('youtube_url');
   var submitBtn = document.getElementById('submitBtn');
   var inputTabs = document.getElementById('inputTabs');
@@ -1122,6 +1303,7 @@
   var exampleSelected = document.getElementById('exampleSelected');
   var examplesModal = document.getElementById('examplesModal');
   var exampleModalList = document.getElementById('exampleModalList');
+  var exampleInlineList = document.getElementById('exampleInlineList');
   var exampleSearch = document.getElementById('exampleSearch');
   var examplesModalClose = document.getElementById('examplesModalClose');
   var examplePreviewAudio = null;
@@ -1134,18 +1316,151 @@
     examplePlayBtns.forEach(function (btn) { btn.classList.remove('playing'); });
     currentExamplePlayer = null;
   }
+  function clearExampleSelectedInLists() {
+    clearExampleSelectedInLists();
+    if (exampleInlineList) exampleInlineList.querySelectorAll('.example-inline-item').forEach(function (el) { el.classList.remove('selected'); });
+  }
   function selectExample(filename, name) {
     if (exampleInput) exampleInput.value = filename;
     if (exampleSelected) { exampleSelected.textContent = 'Selected: ' + name; exampleSelected.hidden = false; }
     var mobileExampleSelected = document.getElementById('mobileExampleSelected');
     if (mobileExampleSelected) { mobileExampleSelected.textContent = 'Selected: ' + name; mobileExampleSelected.hidden = false; }
-    if (fileInput) { fileInput.value = ''; if (audioFileName) audioFileName.textContent = ''; }
+    if (fileInput) { fileInput.value = ''; updateFileDropUI(); }
     if (ytInput) ytInput.value = '';
     closeExamplesModal();
-    if (exampleModalList) exampleModalList.querySelectorAll('.example-modal-item').forEach(function (el) { el.classList.remove('selected'); });
+    clearExampleSelectedInLists();
+    if (exampleModalList) exampleModalList.querySelectorAll('.example-modal-item').forEach(function (li) { if (li.getAttribute('data-filename') === filename) li.classList.add('selected'); });
+    if (exampleInlineList) exampleInlineList.querySelectorAll('.example-inline-item').forEach(function (el) { if (el.getAttribute('data-filename') === filename) el.classList.add('selected'); });
     if (window.matchMedia('(max-width: 680px)').matches && form && typeof form.requestSubmit === 'function') {
       setTimeout(function () { form.requestSubmit(); }, 100);
     }
+  }
+  function renderExampleInlineList(examples) {
+    if (!exampleInlineList || !examples.length) return;
+    exampleInlineList.innerHTML = '';
+    function fmtTime(s) {
+      if (!s || isNaN(s)) return '0:00';
+      var m = Math.floor(s / 60);
+      var sec = Math.floor(s % 60);
+      return m + ':' + (sec < 10 ? '0' : '') + sec;
+    }
+    examples.forEach(function (ex) {
+      var li = document.createElement('li');
+      li.className = 'example-inline-item';
+      li.setAttribute('data-filename', ex.filename);
+      li.setAttribute('data-name', ex.name);
+      var topRow = document.createElement('div');
+      topRow.className = 'example-inline-top-row';
+      var info = document.createElement('div');
+      info.className = 'example-inline-info';
+      var nameEl = document.createElement('div');
+      nameEl.className = 'example-inline-name';
+      nameEl.textContent = ex.name;
+      info.appendChild(nameEl);
+      var metaRow = document.createElement('div');
+      metaRow.className = 'example-inline-meta';
+      if (ex.difficulty != null && ex.difficulty >= 1 && ex.difficulty <= 5) {
+        var starsSpan = document.createElement('span');
+        starsSpan.className = 'example-inline-stars';
+        var d = Math.round(ex.difficulty);
+        var starsHtml = '';
+        for (var i = 1; i <= 5; i++) starsHtml += i <= d ? '★' : '<span>☆</span>';
+        starsSpan.innerHTML = starsHtml;
+        metaRow.appendChild(starsSpan);
+      }
+      if (ex.category) {
+        var catEl = document.createElement('span');
+        catEl.className = 'example-inline-cat';
+        catEl.textContent = ex.category;
+        metaRow.appendChild(catEl);
+      }
+      if (metaRow.children.length) info.appendChild(metaRow);
+      topRow.appendChild(info);
+      var chooseBtn = document.createElement('button');
+      chooseBtn.type = 'button';
+      chooseBtn.className = 'example-inline-choose';
+      chooseBtn.textContent = 'Choose';
+      chooseBtn.addEventListener('click', function () { selectExample(ex.filename, ex.name); });
+      topRow.appendChild(chooseBtn);
+      li.appendChild(topRow);
+      var audioUrl = '/api/examples/audio/' + encodeURIComponent(ex.filename);
+      var playerWrap = document.createElement('div');
+      playerWrap.className = 'example-inline-player example-player-wrap';
+      var playBtn = document.createElement('button');
+      playBtn.type = 'button';
+      playBtn.className = 'example-play-btn';
+      playBtn.setAttribute('aria-label', 'Play sample');
+      playBtn.innerHTML = '<svg class="example-icon-play" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg><svg class="example-icon-pause" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>';
+      var seekWrap = document.createElement('div');
+      seekWrap.className = 'example-seek-wrap';
+      var seekInput = document.createElement('input');
+      seekInput.type = 'range';
+      seekInput.className = 'example-seek';
+      seekInput.min = 0;
+      seekInput.max = 1000;
+      seekInput.value = 0;
+      var timeEl = document.createElement('span');
+      timeEl.className = 'example-time';
+      timeEl.textContent = '0:00 / 0:00';
+      seekWrap.appendChild(seekInput);
+      playerWrap.appendChild(playBtn);
+      playerWrap.appendChild(seekWrap);
+      playerWrap.appendChild(timeEl);
+      function bindInlinePlay() {
+        if (!examplePreviewAudio) examplePreviewAudio = new Audio();
+        var isThisRow = examplePreviewAudio.src && examplePreviewAudio.src.indexOf(ex.filename) !== -1;
+        if (isThisRow && !examplePreviewAudio.paused) {
+          currentExamplePlayer = null;
+          examplePreviewAudio.pause();
+          playBtn.classList.remove('playing');
+          return;
+        }
+        if (isThisRow && examplePreviewAudio.paused) {
+          examplePlayBtns.forEach(function (b) { b.classList.remove('playing'); });
+          currentExamplePlayer = { seekInput: seekInput, timeEl: timeEl, playBtn: playBtn };
+          playBtn.classList.add('playing');
+          examplePreviewAudio.play();
+          return;
+        }
+        if (currentExamplePlayer) {
+          currentExamplePlayer.playBtn.classList.remove('playing');
+          if (currentExamplePlayer.seekInput) currentExamplePlayer.seekInput.value = 0;
+          if (currentExamplePlayer.timeEl) currentExamplePlayer.timeEl.textContent = '0:00 / 0:00';
+        }
+        examplePlayBtns.forEach(function (b) { b.classList.remove('playing'); });
+        currentExamplePlayer = { seekInput: seekInput, timeEl: timeEl, playBtn: playBtn };
+        examplePreviewAudio.src = audioUrl;
+        examplePreviewAudio.play();
+        playBtn.classList.add('playing');
+        seekInput.value = 0;
+        timeEl.textContent = '0:00 / 0:00';
+        examplePreviewAudio.onloadedmetadata = function () {
+          timeEl.textContent = '0:00 / ' + fmtTime(examplePreviewAudio.duration);
+        };
+        examplePreviewAudio.ontimeupdate = function () {
+          if (!examplePreviewAudio.duration) return;
+          seekInput.value = Math.floor((examplePreviewAudio.currentTime / examplePreviewAudio.duration) * 1000);
+          timeEl.textContent = fmtTime(examplePreviewAudio.currentTime) + ' / ' + fmtTime(examplePreviewAudio.duration);
+        };
+        examplePreviewAudio.onended = function () {
+          playBtn.classList.remove('playing');
+          seekInput.value = 0;
+          timeEl.textContent = '0:00 / ' + fmtTime(examplePreviewAudio.duration);
+        };
+      }
+      playBtn.addEventListener('click', function (e) { e.stopPropagation(); bindInlinePlay(); });
+      seekInput.addEventListener('input', function (e) {
+        e.stopPropagation();
+        if (examplePreviewAudio && examplePreviewAudio.src && examplePreviewAudio.src.indexOf(ex.filename) !== -1 && examplePreviewAudio.duration) {
+          examplePreviewAudio.currentTime = (parseInt(seekInput.value, 10) / 1000) * examplePreviewAudio.duration;
+        }
+      });
+      seekInput.addEventListener('click', function (e) { e.stopPropagation(); });
+      examplePlayBtns.push(playBtn);
+      li.appendChild(playerWrap);
+      if (exampleInput && exampleInput.value === ex.filename) li.classList.add('selected');
+      exampleInlineList.appendChild(li);
+    });
   }
   function filterExampleList() {
     var q = (exampleSearch && exampleSearch.value) ? exampleSearch.value.trim().toLowerCase() : '';
@@ -1252,8 +1567,8 @@
 
                 if (currentExamplePlayer) {
                   currentExamplePlayer.playBtn.classList.remove('playing');
-                  currentExamplePlayer.seekInput.value = 0;
-                  currentExamplePlayer.timeEl.textContent = '0:00 / 0:00';
+                  if (currentExamplePlayer.seekInput) { currentExamplePlayer.seekInput.value = 0; }
+                  if (currentExamplePlayer.timeEl) currentExamplePlayer.timeEl.textContent = '0:00 / 0:00';
                 }
                 examplePlayBtns.forEach(function (b) { b.classList.remove('playing'); });
                 currentExamplePlayer = { seekInput: seekInput, timeEl: timeEl, playBtn: playBtn };
@@ -1295,8 +1610,6 @@
               chooseBtn.addEventListener('click', function (e) {
                 e.stopPropagation();
                 selectExample(ex.filename, ex.name);
-                exampleModalList.querySelectorAll('.example-modal-item').forEach(function (el) { el.classList.remove('selected'); });
-                li.classList.add('selected');
               });
               topRow.appendChild(infoDiv);
               topRow.appendChild(chooseBtn);
@@ -1348,13 +1661,13 @@
     youtubeModalConfirm.addEventListener('click', function () {
       var url = youtubeModalInput ? youtubeModalInput.value.trim() : '';
       ytInput.value = url;
-      if (fileInput) { fileInput.value = ''; if (audioFileName) audioFileName.textContent = ''; }
+      if (fileInput) { fileInput.value = ''; updateFileDropUI(); }
       if (exampleInput && exampleInput.value) {
         exampleInput.value = '';
         if (exampleSelected) exampleSelected.hidden = true;
         var mobileEx = document.getElementById('mobileExampleSelected');
         if (mobileEx) { mobileEx.textContent = ''; mobileEx.hidden = true; }
-        if (exampleModalList) exampleModalList.querySelectorAll('.example-modal-item').forEach(function (el) { el.classList.remove('selected'); });
+        clearExampleSelectedInLists();
       }
       closeYoutubeModal();
       if (url && window.matchMedia('(max-width: 680px)').matches && form && typeof form.requestSubmit === 'function') {
@@ -1370,28 +1683,75 @@
     else if (youtubeModal && youtubeModal.classList.contains('open')) closeYoutubeModal();
   });
 
-  /* Label for="audio" opens file picker natively (better on mobile). No extra click handler needed. */
+  function formatFileSize(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  }
+  function updateFileDropUI() {
+    if (!fileDropZone || !fileDropEmpty || !fileDropPreview) return;
+    var file = fileInput && fileInput.files && fileInput.files[0] ? fileInput.files[0] : null;
+    if (!file) {
+      fileDropZone.classList.remove('has-file');
+      fileDropEmpty.hidden = false;
+      fileDropPreview.hidden = true;
+      return;
+    }
+    fileDropZone.classList.add('has-file');
+    fileDropEmpty.hidden = true;
+    fileDropPreview.hidden = false;
+    var name = file.name || 'audio';
+    var ext = name.lastIndexOf('.') >= 0 ? name.slice(name.lastIndexOf('.')) : '';
+    if (fileDropPreviewName) fileDropPreviewName.textContent = name;
+    if (fileDropPreviewMeta) fileDropPreviewMeta.textContent = (ext ? ext.toUpperCase().slice(1) + ' · ' : '') + formatFileSize(file.size);
+  }
+  if (fileDropZone && fileInput) {
+    fileDropZone.addEventListener('click', function () { fileInput.click(); });
+    fileDropZone.addEventListener('dragover', function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      fileDropZone.classList.add('drag-over');
+    });
+    fileDropZone.addEventListener('dragleave', function (e) {
+      e.preventDefault();
+      fileDropZone.classList.remove('drag-over');
+    });
+    fileDropZone.addEventListener('drop', function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      fileDropZone.classList.remove('drag-over');
+      var files = e.dataTransfer && e.dataTransfer.files;
+      if (files && files.length > 0) {
+        var dt = new DataTransfer();
+        dt.items.add(files[0]);
+        fileInput.files = dt.files;
+        fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    });
+  }
   if (fileInput) {
     fileInput.addEventListener('change', function () {
-      if (audioFileName) audioFileName.textContent = fileInput.files && fileInput.files[0] ? fileInput.files[0].name : '';
+      updateFileDropUI();
       if (ytInput) ytInput.value = '';
       if (exampleInput && exampleInput.value) {
         exampleInput.value = '';
         if (exampleSelected) exampleSelected.hidden = true;
         var mobileEx = document.getElementById('mobileExampleSelected');
         if (mobileEx) { mobileEx.textContent = ''; mobileEx.hidden = true; }
-        if (exampleModalList) exampleModalList.querySelectorAll('.example-modal-item').forEach(function (el) { el.classList.remove('selected'); });
+        clearExampleSelectedInLists();
       }
       if (window.matchMedia('(max-width: 680px)').matches && fileInput.files && fileInput.files.length > 0 && form && typeof form.requestSubmit === 'function') {
         setTimeout(function () { form.requestSubmit(); }, 100);
       }
     });
   }
+  updateFileDropUI();
   fetch('/api/examples').then(function (r) { return r.json(); }).then(function (data) {
     if (!data.examples || data.examples.length === 0) { if (exampleSection) exampleSection.hidden = true; }
+    else { renderExampleInlineList(data.examples); }
   }).catch(function () { if (exampleSection) exampleSection.hidden = true; });
 
-  if (inputTabs) {
+  if (inputTabs && exampleSection) {
     inputTabs.addEventListener('click', function (e) {
       var tab = e.target.closest('.input-tab');
       if (!tab) return;
@@ -1401,24 +1761,30 @@
       if (mode === 'url') {
         inputPanelUrl.hidden = false;
         inputPanelFile.hidden = true;
-        if (fileInput) { fileInput.value = ''; if (audioFileName) audioFileName.textContent = ''; }
+        exampleSection.hidden = true;
         if (exampleInput && exampleInput.value) {
           exampleInput.value = '';
           if (exampleSelected) exampleSelected.hidden = true;
           var mobileEx = document.getElementById('mobileExampleSelected');
           if (mobileEx) { mobileEx.textContent = ''; mobileEx.hidden = true; }
-          if (exampleModalList) exampleModalList.querySelectorAll('.example-modal-item').forEach(function (el) { el.classList.remove('selected'); });
+          clearExampleSelectedInLists();
         }
+      } else if (mode === 'example') {
+        inputPanelUrl.hidden = true;
+        inputPanelFile.hidden = true;
+        exampleSection.hidden = false;
+        if (ytInput) ytInput.value = '';
       } else {
         inputPanelUrl.hidden = true;
         inputPanelFile.hidden = false;
+        exampleSection.hidden = true;
         if (ytInput) ytInput.value = '';
         if (exampleInput && exampleInput.value) {
           exampleInput.value = '';
           if (exampleSelected) exampleSelected.hidden = true;
           var mobileEx = document.getElementById('mobileExampleSelected');
           if (mobileEx) { mobileEx.textContent = ''; mobileEx.hidden = true; }
-          if (exampleModalList) exampleModalList.querySelectorAll('.example-modal-item').forEach(function (el) { el.classList.remove('selected'); });
+          clearExampleSelectedInLists();
         }
       }
     });
@@ -3224,6 +3590,7 @@
     stopAnimation();
     clearResultState();
     form.reset();
+    updateFileDropUI();
     inlineError.hidden = true;
     stageLoading.hidden = true;
     resultActions.hidden = true;
@@ -3375,8 +3742,8 @@
         return;
       }
     }
-    if (hasUrl) { fileInput.value = ''; if (exampleInput) exampleInput.value = ''; }
-    else if (hasExample) fileInput.value = '';
+    if (hasUrl) { fileInput.value = ''; updateFileDropUI(); if (exampleInput) exampleInput.value = ''; }
+    else if (hasExample) { fileInput.value = ''; updateFileDropUI(); }
     else { ytInput.value = ''; if (exampleInput) exampleInput.value = ''; }
 
     stageResult.hidden = true;
