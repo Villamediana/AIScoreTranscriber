@@ -294,8 +294,7 @@ def download_youtube_audio(youtube_url: str) -> tuple[Path, str]:
     out_id = uuid.uuid4().hex
     output_template = str(UPLOAD_FOLDER / f"{out_id}.%(ext)s")
     ydl_opts = {
-        # Qualquer formato disponível; depois extraímos áudio com FFmpeg (funciona com vídeos restritos)
-        "format": "best/b/worst",
+        # Sem "format": usa o padrão do extractor (mais flexível; alguns vídeos falham com format explícito)
         "outtmpl": output_template,
         "noplaylist": True,
         "quiet": True,
