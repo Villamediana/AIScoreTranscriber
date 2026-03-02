@@ -16,7 +16,7 @@ It's often hard to find piano scores for specific pieces. **AI Score Transcriber
 
 | Area | Description |
 |------|-------------|
-| **Input** | Local file (WAV, MP3, FLAC, OGG, M4A, WEBM, up to 100 MB). Audio is converted to WAV (22,050 Hz, mono) for processing. |
+| **Input** | Local file (WAV, MP3, FLAC, OGG, M4A, WEBM, up to 50 MB). Audio is converted to WAV (22,050 Hz, mono) for processing. |
 | **Transcription** | Basic Pitch → MIDI with notes, BPM, and time signature. Same data drives the on-screen score. |
 | **Views** | **Piano roll** (waterfall) and **Sheet** (full score with VexFlow). Time signature and BPM adjustable. **Note data** panel with event table. |
 | **Playback** | Original audio + MIDI preview (polyphonic synthesis). Volume and BPM controls, seek bar. |
