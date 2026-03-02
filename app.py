@@ -351,9 +351,18 @@ def transcribe_options():
     return "", 204
 
 
+def _youtube_cookies_available() -> bool:
+    """True se YOUTUBE_COOKIES_FILE está definido e o ficheiro existe."""
+    path = os.environ.get("YOUTUBE_COOKIES_FILE", "").strip()
+    return bool(path and Path(path).is_file())
+
+
 @app.route("/")
 def index():
-    return render_template("index.html")
+    return render_template(
+        "index.html",
+        youtube_enabled=_youtube_cookies_available(),
+    )
 
 
 @app.route("/results/<result_id>/<kind>")
