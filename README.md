@@ -24,6 +24,17 @@ It's often hard to find piano scores for specific pieces. **AI Score Transcriber
 
 ---
 
+## Mobile and tablet
+
+- **File size:** Uploads are limited to **50 MB**. Larger files will show “File too large”.
+- **Choosing a file:** On phones/tablets, tap **Upload File** and pick the audio from your device (e.g. **Files** or **Downloads**). The app accepts common audio types (including MP3). If the picker does not show your file, try opening it from the **Files** (or equivalent) app and use “Share” / “Open with” if your browser supports it.
+- **“Network error” or “Connection error”:** This often means:
+  - The file is large or the connection is slow, and the request **timed out** (try a shorter track or Wi‑Fi).
+  - The file is **over 50 MB** (try a shorter or lower-quality file).
+  - The connection dropped (try again on a stable network).
+
+---
+
 ## Quick start
 
 **1. Clone the repo**

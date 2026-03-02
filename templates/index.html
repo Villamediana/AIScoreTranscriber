@@ -714,8 +714,8 @@
       <div class="input-panel input-panel-file" id="inputPanelFile">
         <div class="field" id="audioField">
           <div class="file-input-wrap">
-            <input type="file" name="audio" id="audio" accept=".wav,.mp3,.flac,.ogg,.m4a,.webm" class="file-input-native">
-            <button type="button" class="file-input-btn" id="audioChooseBtn">Upload File</button>
+            <input type="file" name="audio" id="audio" accept="audio/*,.wav,.mp3,.flac,.ogg,.m4a,.webm,audio/wav,audio/mpeg,audio/flac,audio/ogg,audio/mp4,audio/webm" class="file-input-native">
+            <label for="audio" class="file-input-btn" id="audioChooseBtn">Upload File</label>
             <span class="file-input-name" id="audioFileName"></span>
           </div>
         </div>
@@ -1096,9 +1096,7 @@
     if (e.key === 'Escape' && examplesModal && examplesModal.classList.contains('open')) closeExamplesModal();
   });
 
-  if (audioChooseBtn && fileInput) {
-    audioChooseBtn.addEventListener('click', function () { fileInput.click(); });
-  }
+  /* Label for="audio" opens file picker natively (better on mobile). No extra click handler needed. */
   if (fileInput) {
     fileInput.addEventListener('change', function () {
       if (audioFileName) audioFileName.textContent = fileInput.files && fileInput.files[0] ? fileInput.files[0].name : '';
@@ -3011,6 +3009,7 @@
     xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
     xhr.setRequestHeader('Accept', 'application/json,audio/midi');
     xhr.responseType = 'blob';
+    xhr.timeout = 300000; /* 5 min — transcription can be slow on mobile/slow connections */
 
     xhr.onreadystatechange = function () {
       if (xhr.readyState === 2) stageLoadingText.textContent = 'Transcribing to MIDI...';
@@ -3021,6 +3020,11 @@
       stopStatusTicker();
       restoreBtn();
       var ct = xhr.getResponseHeader('Content-Type') || '';
+      if (xhr.status === 413) {
+        stageLoading.hidden = true; stageEmpty.hidden = false;
+        showError('File too large (max 50 MB). Try a shorter track.');
+        return;
+      }
       if (xhr.status >= 200 && xhr.status < 300 && ct.includes('application/json')) {
         xhr.response.text().then(function (t) {
           var data = JSON.parse(t);
@@ -3046,10 +3050,15 @@
       }).catch(function () { showError('Transcription failed.'); });
     };
 
+    xhr.ontimeout = function () {
+      stopStatusTicker(); restoreBtn();
+      stageLoading.hidden = true; stageEmpty.hidden = false;
+      showError('Request timed out. Try a shorter file or a stronger connection (e.g. Wi‑Fi).');
+    };
     xhr.onerror = function () {
       stopStatusTicker(); restoreBtn();
       stageLoading.hidden = true; stageEmpty.hidden = false;
-      showError('Connection error. Check your network.');
+      showError('Connection error. If the file is large or the connection is slow, try a shorter file or Wi‑Fi.');
     };
     xhr.send(new FormData(form));
   });
