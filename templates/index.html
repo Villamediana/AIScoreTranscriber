@@ -548,6 +548,25 @@
       white-space: nowrap;
     }
     .example-modal-item .example-stars span { color: var(--border-2); }
+    .modal-youtube .modal-content { width: min(420px, 92vw); }
+    .youtube-modal-input {
+      width: 100%;
+      padding: 0.65rem 0.9rem;
+      font-family: inherit;
+      font-size: 0.95rem;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--panel);
+      color: var(--text);
+      box-sizing: border-box;
+    }
+    .youtube-modal-input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(124,58,237,0.1);
+    }
+    .youtube-modal-actions { margin-top: 1rem; }
+    .youtube-modal-confirm { width: 100%; }
     .example-play-btn {
       flex-shrink: 0;
       width: 34px;
@@ -758,6 +777,20 @@
         border-color: var(--accent);
         box-shadow: 0 0 0 3px rgba(124,58,237,0.1);
       }
+      .mobile-bar-youtube {
+        color: #c4302b;
+        background: rgba(196, 48, 43, 0.08);
+        border-color: rgba(196, 48, 43, 0.25);
+      }
+      .mobile-bar-youtube:hover {
+        background: rgba(196, 48, 43, 0.14);
+        border-color: #c4302b;
+        color: #a82823;
+      }
+      .mobile-bar-youtube:focus {
+        border-color: #c4302b;
+        box-shadow: 0 0 0 3px rgba(196, 48, 43, 0.15);
+      }
       .mobile-bar-btn svg { flex-shrink: 0; }
       .mobile-bar-label { white-space: nowrap; }
       .mobile-bar-transcribe {
@@ -931,6 +964,12 @@
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
       <span class="mobile-bar-label">Upload</span>
     </label>
+    {% if youtube_enabled %}
+    <button type="button" class="mobile-bar-btn mobile-bar-youtube" id="mobileYoutubeBtn" title="Paste YouTube link">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+      <span class="mobile-bar-label">YouTube</span>
+    </button>
+    {% endif %}
     <button type="button" class="mobile-bar-btn mobile-bar-example" id="mobileExampleBtn" title="Choose a sample">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
       <span class="mobile-bar-label">Choose sample</span>
@@ -952,6 +991,22 @@
         </div>
         <p class="example-modal-hint">Preview with play, then click Choose to use this example.</p>
         <ul class="example-modal-list" id="exampleModalList"></ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="youtubeModal" aria-hidden="true">
+    <div class="modal-content modal-youtube">
+      <div class="modal-header">
+        <span class="modal-title">YouTube link</span>
+        <button type="button" class="modal-close" id="youtubeModalClose" aria-label="Close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <label class="field-label" for="youtubeModalInput">URL</label>
+        <input type="url" id="youtubeModalInput" class="youtube-modal-input" placeholder="https://youtube.com/watch?v=..." autocomplete="off">
+        <div class="youtube-modal-actions">
+          <button type="button" class="btn-submit youtube-modal-confirm" id="youtubeModalConfirm">Confirm</button>
+        </div>
       </div>
     </div>
   </div>
@@ -1263,8 +1318,56 @@
   if (examplesModal) {
     examplesModal.addEventListener('click', function (e) { if (e.target === examplesModal) closeExamplesModal(); });
   }
+  var youtubeModal = document.getElementById('youtubeModal');
+  var mobileYoutubeBtn = document.getElementById('mobileYoutubeBtn');
+  var youtubeModalClose = document.getElementById('youtubeModalClose');
+  var youtubeModalInput = document.getElementById('youtubeModalInput');
+  var youtubeModalConfirm = document.getElementById('youtubeModalConfirm');
+  function openYoutubeModal() {
+    if (youtubeModal) {
+      if (ytInput && ytInput.value) youtubeModalInput.value = ytInput.value;
+      else youtubeModalInput.value = '';
+      youtubeModal.classList.add('open');
+      youtubeModal.setAttribute('aria-hidden', 'false');
+      setTimeout(function () { if (youtubeModalInput) youtubeModalInput.focus(); }, 100);
+    }
+  }
+  function closeYoutubeModal() {
+    if (!youtubeModal) return;
+    var active = document.activeElement;
+    if (active && youtubeModal.contains(active)) {
+      active.blur();
+      document.body.setAttribute('tabindex', '-1');
+      document.body.focus();
+    }
+    youtubeModal.classList.remove('open');
+    youtubeModal.setAttribute('aria-hidden', 'true');
+  }
+  if (mobileYoutubeBtn) mobileYoutubeBtn.addEventListener('click', openYoutubeModal);
+  if (youtubeModalConfirm && ytInput) {
+    youtubeModalConfirm.addEventListener('click', function () {
+      var url = youtubeModalInput ? youtubeModalInput.value.trim() : '';
+      ytInput.value = url;
+      if (fileInput) { fileInput.value = ''; if (audioFileName) audioFileName.textContent = ''; }
+      if (exampleInput && exampleInput.value) {
+        exampleInput.value = '';
+        if (exampleSelected) exampleSelected.hidden = true;
+        var mobileEx = document.getElementById('mobileExampleSelected');
+        if (mobileEx) { mobileEx.textContent = ''; mobileEx.hidden = true; }
+        if (exampleModalList) exampleModalList.querySelectorAll('.example-modal-item').forEach(function (el) { el.classList.remove('selected'); });
+      }
+      closeYoutubeModal();
+      if (url && window.matchMedia('(max-width: 680px)').matches && form && typeof form.requestSubmit === 'function') {
+        setTimeout(function () { form.requestSubmit(); }, 150);
+      }
+    });
+  }
+  if (youtubeModalClose) youtubeModalClose.addEventListener('click', closeYoutubeModal);
+  if (youtubeModal) youtubeModal.addEventListener('click', function (e) { if (e.target === youtubeModal) closeYoutubeModal(); });
   document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape' && examplesModal && examplesModal.classList.contains('open')) closeExamplesModal();
+    if (e.key !== 'Escape') return;
+    if (examplesModal && examplesModal.classList.contains('open')) closeExamplesModal();
+    else if (youtubeModal && youtubeModal.classList.contains('open')) closeYoutubeModal();
   });
 
   /* Label for="audio" opens file picker natively (better on mobile). No extra click handler needed. */
@@ -3241,10 +3344,10 @@
 
     var urlTabActive = inputPanelFile.hidden;
     var hasFile = !urlTabActive && fileInput.files && fileInput.files.length > 0;
-    var hasUrl = urlTabActive && ytInput.value.trim().length > 0;
+    var hasUrl = ytInput && ytInput.value.trim().length > 0;
     var hasExample = exampleInput && exampleInput.value.trim().length > 0;
     if (!hasFile && !hasUrl && !hasExample) {
-      showError(urlTabActive ? 'Paste a YouTube URL.' : 'Select an audio file or choose an example.');
+      showError('Select an audio file, paste a YouTube URL, or choose an example.');
       return;
     }
     if (hasFile && fileInput.files[0]) {

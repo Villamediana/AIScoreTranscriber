@@ -99,9 +99,81 @@ Screenshots of the app are in the [`screenshots/`](https://github.com/Villamedia
 
 ---
 
-## YouTube (local only; production TBD)
+## YouTube (cookies + optional EJS)
 
-YouTube URL input is **temporarily hidden** in the UI. It works when you run the app **locally**; in production (e.g. on a VPS) YouTube often blocks requests and would require a future implementation (e.g. cookies file or other auth) to work. The backend still supports it—once that adjustment is in place, the YouTube tab can be shown again.
+The **YouTube** tab (and on mobile the **YouTube** button + modal) only appears when the app is configured with a **cookies file**. Without it, YouTube often blocks downloads (“Sign in to confirm you're not a bot”). Follow the steps below to enable it.
+
+### 1. Create the cookies file
+
+Export your YouTube session cookies from a browser in **Netscape format**:
+
+- **Chrome (recommended):** Install the extension [Get cookies.txt LOCALLY](https://chrome.google.com/webstore/detail/get-cookiestxt-locally/cclelndahbckbenkjhflpdbgdldlbecc). Open [youtube.com](https://www.youtube.com), log in (prefer a secondary account), then use the extension to export cookies for the current site. Save as `cookies.txt`.
+- **Command line (yt-dlp):** With Chrome closed or another profile, run:  
+  `yt-dlp --cookies-from-browser chrome --cookies cookies.txt "https://www.youtube.com"`  
+  This creates/overwrites `cookies.txt` in the current folder.
+
+The first line of the file must be `# Netscape HTTP Cookie File`. **Do not commit this file or share it** (it contains session data).
+
+### 2. Where to put the file
+
+Place `cookies.txt` in a fixed path, for example:
+
+- **Windows:** `C:\Users\<you>\.config\NoteAIs\cookies.txt` or inside the project folder.
+- **Linux / server:** `~/AIScoreTranscriber/cookies.txt` or `~/.config/AIScoreTranscriber/cookies.txt`.
+
+The project’s `.gitignore` already ignores `*.txt` (except `requirements.txt`), so `cookies.txt` will not be committed.
+
+### 3. Set the environment variable
+
+The app reads the path from **`YOUTUBE_COOKIES_FILE`**. Set it **before** starting the app.
+
+**Windows (PowerShell)** — current session only:
+
+```powershell
+$env:YOUTUBE_COOKIES_FILE = "C:\Users\<you>\...\cookies.txt"
+```
+
+**Windows (permanent, current user):**
+
+```powershell
+[System.Environment]::SetEnvironmentVariable("YOUTUBE_COOKIES_FILE", "C:\Users\<you>\...\cookies.txt", "User")
+```
+
+Then restart the terminal/IDE and run the app.
+
+**Linux / macOS** — current session:
+
+```bash
+export YOUTUBE_COOKIES_FILE="$HOME/AIScoreTranscriber/cookies.txt"
+```
+
+**Linux / macOS (permanent):** add to `~/.bashrc` (or equivalent):
+
+```bash
+echo 'export YOUTUBE_COOKIES_FILE="$HOME/AIScoreTranscriber/cookies.txt"' >> ~/.bashrc
+source ~/.bashrc
+```
+
+### 4. Server (VPS / production)
+
+On the server:
+
+1. Create the file, e.g. `touch ~/AIScoreTranscriber/cookies.txt`, then edit it and paste the Netscape-format cookies (exported on your PC and copied over, or via SCP).
+2. Set the variable in the **same environment** that starts the app:
+   - **Option A:** In the same shell: `export YOUTUBE_COOKIES_FILE="$HOME/AIScoreTranscriber/cookies.txt"`, then start the app (e.g. `nohup venv/bin/python app.py ...`). If you use a new shell later, run `source ~/.bashrc` first if you added the export there.
+   - **Option B:** Add the export to `~/.bashrc` as above, open a **new** SSH session, then start the app so it inherits the variable.
+3. Restart the app after changing the variable so the process sees it.
+
+Cookies expire; if YouTube starts blocking again, export a fresh `cookies.txt` and replace the file (and restart the app if needed).
+
+### 5. Optional: full format support (yt-dlp 2025.11+)
+
+From yt-dlp **2025.11** onward, YouTube may return “Requested format is not available” unless a JavaScript runtime and the EJS component are available. The app already enables `remote_components: ["ejs:github"]` and `requirements.txt` includes `yt-dlp-ejs`. On the **server**, install:
+
+- **Deno:** `curl -fsSL https://deno.land/install.sh | sh` and add `~/.deno/bin` to `PATH` (e.g. in `~/.bashrc`).
+- **yt-dlp-ejs in the venv:** `venv/bin/pip install yt-dlp-ejs`.
+
+Start the app in a shell where `deno` is on `PATH` so yt-dlp can resolve formats correctly.
 
 ---
 
